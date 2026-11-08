@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Stock AI Trader
 
 **An Uncertainty-Aware, Dynamically Routed, Temporally Grounded Financial RAG Multi-Agent Trading Framework with Adaptive Risk Constraints, Stress Testing, Self-Critique, and Counterfactual Explanations**
@@ -252,3 +253,6 @@ curl http://localhost:5000/api/backtest/AAPL
 2. **Strict Chronological Separation:** Feature engineering, ML training, and RAG document retrieval maintain past-and-present boundaries to prevent look-ahead bias.
 3. **Paper Trading Simulation:** Execution models include realistic commission costs and market impact slippage. However, backtest results on sample datasets demonstrate evaluation mechanics rather than claims of future alpha.
 4. **No Financial Guarantees:** Model confidence scores denote mathematical certainty relative to model assumptions, not guarantees of profitability.
+=======
+# Risk-Aware-Multi-Agent-Generative-AI-for-Stock-Forex-Trading-and-Portfolio-Optimization
+>>>>>>> b3600725fcbd40995b864859bd8d24d350ed3dcf
