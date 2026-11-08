@@ -1,0 +1,13 @@
+venv/
+__pycache__/
+*.pyc
+.env
+data/app.db
+data/parquet/*.parquet
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+.pytest_cache/
+*.egg-info/
+.DS_Store

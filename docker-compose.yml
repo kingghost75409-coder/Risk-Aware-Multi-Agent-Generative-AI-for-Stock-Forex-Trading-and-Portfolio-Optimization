@@ -1,0 +1,30 @@
+# Optional. Runs the app against a real Postgres instance instead of the
+# default local SQLite file — swap DATABASE_URL in .env accordingly.
+# Not built/tested in the sandbox used to develop this project.
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://trader:trader@db:5432/stock_ai_trader
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=trader
+      - POSTGRES_PASSWORD=trader
+      - POSTGRES_DB=stock_ai_trader
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

@@ -1,0 +1,2275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="AI-powered stock trading research terminal with real-time data, multi-agent analysis, and intelligent chatbot">
+  <title>Stock AI Trader — Real-Time Trading Terminal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/lightweight-charts.standalone.js"></script>
+</head>
+
+<body>
+
+  <!-- ═══ TOP BAR ═══════════════════════════════════════════════════════ -->
+  <header class="topbar">
+    <div class="topbar__brand">
+      <div class="topbar__mark">AI</div>
+      <div>
+        <div class="topbar__title">Stock AI Trader</div>
+        <div class="topbar__subtitle">Multi-Agent Trading Terminal</div>
+      </div>
+    </div>
+    <div class="topbar__search">
+      <input type="text" id="search-input" placeholder="Search stocks, ETFs & more" autocomplete="off">
+    </div>
+    <div class="topbar__mode">
+      <span class="mode-dot"></span>
+      PAPER TRADING
+    </div>
+    <div class="topbar__clock" id="clock">--:--:-- UTC</div>
+  </header>
+
+  <!-- ═══ TICKER RIBBON ═════════════════════════════════════════════════ -->
+  <div class="ticker-ribbon" id="ticker-ribbon">
+    <div class="ticker-ribbon__track" id="ticker-track">
+      <!-- JS populates -->
+    </div>
+  </div>
+
+  <!-- ═══ SECTION NAVIGATION ════════════════════════════════════════════ -->
+  <nav class="section-nav" id="section-nav">
+    <button class="nav-btn active" data-section="dashboard">
+      <span class="nav-btn__icon">📊</span> Short-Term Trading
+    </button>
+    <button class="nav-btn" data-section="long-term-dashboard">
+      <span class="nav-btn__icon">🏦</span> Long-Term Investment
+    </button>
+    <button class="nav-btn" data-section="agents">
+      <span class="nav-btn__icon">🤖</span> AI Agents
+    </button>
+    <button class="nav-btn" data-section="evidence">
+      <span class="nav-btn__icon">📄</span> Evidence
+    </button>
+    <button class="nav-btn" data-section="risk">
+      <span class="nav-btn__icon">🛡️</span> Risk & Portfolio
+    </button>
+    <button class="nav-btn" data-section="news">
+      <span class="nav-btn__icon">📰</span> News
+    </button>
+    <button class="nav-btn" data-section="backtest">
+      <span class="nav-btn__icon">⚡</span> Backtest
+    </button>
+    <button class="nav-btn" data-section="investment-strategy" id="nav-btn-investment-strategy">
+      <span class="nav-btn__icon">🎯</span> Combined Strategy
+    </button>
+    <button class="nav-btn" data-section="digital-twin" id="nav-btn-digital-twin">
+      <span class="nav-btn__icon">🧪</span> Digital Twin
+    </button>
+    <button class="nav-btn" data-section="system-health" id="nav-btn-system-health">
+      <span class="nav-btn__icon">🩺</span> AI Health & Attribution
+    </button>
+    <button class="nav-btn" data-section="forex" id="nav-btn-forex">
+      <span class="nav-btn__icon">💱</span> Forex & Macro Events
+    </button>
+  </nav>
+
+  <!-- ═══ MAIN LAYOUT ═══════════════════════════════════════════════════ -->
+  <div class="app-layout">
+
+    <!-- ── LEFT SIDEBAR: Watchlist ─────────────────────────────────── -->
+    <aside class="sidebar">
+      <div class="sidebar__header">
+        Watchlist
+        <span class="sidebar__header-badge" id="llm-status-badge">...</span>
+      </div>
+      <div class="sidebar__list" id="watchlist-list">
+        <!-- JS populates -->
+      </div>
+      <div class="sidebar__actions">
+        <button class="btn btn--ghost btn--full btn--small" id="analyze-all-btn">⚡ Analyze All</button>
+      </div>
+    </aside>
+
+    <!-- ── CENTER CONTENT ─────────────────────────────────────────── -->
+    <main class="main-content" id="main-content">
+
+      <!-- ═══ SECTION: DASHBOARD ═══════════════════════════════════ -->
+      <div class="section active" id="sec-dashboard">
+
+        <!-- Symbol Header -->
+        <div class="symbol-header">
+          <div class="symbol-header__left">
+            <div>
+              <span class="symbol-header__ticker" id="active-symbol">AAPL</span>
+              <span class="symbol-header__company" id="active-company">Apple Inc.</span>
+            </div>
+            <div class="symbol-header__price-row">
+              <span class="symbol-header__price" id="active-price">—</span>
+              <span class="symbol-header__change" id="active-change">—</span>
+            </div>
+            <div class="symbol-header__meta">
+              <span class="symbol-header__meta-item">Vol: <span id="meta-volume">—</span></span>
+              <span class="symbol-header__meta-item">Mkt Cap: <span id="meta-mktcap">—</span></span>
+              <span class="symbol-header__meta-item">Source: <span id="meta-source">—</span></span>
+              <span class="symbol-header__meta-item">Market: <span id="meta-market-status"
+                  style="font-weight: 700; color: var(--yellow);">—</span></span>
+              <span class="symbol-header__meta-item">Firewall: <span id="meta-firewall">CLEAN</span></span>
+            </div>
+          </div>
+          <div class="symbol-header__right">
+            <div class="signal-badge signal-badge--hold" id="active-signal-badge">—</div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn--small" id="analyze-current-btn">⚡ Analyze</button>
+              <button class="btn btn--small btn--buy" id="trade-current-btn">📈 Trade</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Trading Style Selector Bar ────────────────────────────── -->
+        <div class="panel" style="margin-bottom: 14px; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; background: rgba(18, 24, 38, 0.7); border: 1px solid var(--border-color); border-radius: 6px;">
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <span style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Active Trading Style:</span>
+            <div class="trade-side-selector" style="margin: 0; padding: 2px; width: auto; display: inline-flex;" id="trading-style-selector">
+              <button class="trade-side-btn" id="style-btn-day" data-style="DAY" type="button" style="padding: 4px 12px; font-size: 11px;">☀️ Day Trading</button>
+              <button class="trade-side-btn active buy" id="style-btn-swing" data-style="SWING" type="button" style="padding: 4px 12px; font-size: 11px;">🌊 Swing Trading</button>
+              <button class="trade-side-btn" id="style-btn-position" data-style="POSITION" type="button" style="padding: 4px 12px; font-size: 11px;">🏛️ Position Trading</button>
+            </div>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); display: flex; gap: 14px; align-items: center; flex-wrap: wrap;" id="style-meta-bar">
+            <span>TF: <strong id="style-meta-tf" style="color: var(--accent-light);">4h / 1d</strong></span>
+            <span>Max Horizon: <strong id="style-meta-horizon" style="color: var(--text-bright);">14 days</strong></span>
+            <span>Risk/Trade: <strong id="style-meta-risk" style="color: #00d4aa;">1.0%</strong></span>
+            <span>Min R/R: <strong id="style-meta-rr" style="color: var(--yellow);">2.0:1</strong></span>
+          </div>
+        </div>
+
+        <!-- Key Stats Grid (2x4) -->
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-card">
+            <div class="stat-card__label">P/E Ratio</div>
+            <div class="stat-card__value" id="stat-pe">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__label">EPS</div>
+            <div class="stat-card__value" id="stat-eps">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__label">Beta</div>
+            <div class="stat-card__value" id="stat-beta">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__label">Div Yield</div>
+            <div class="stat-card__value" id="stat-div">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__label">52W High</div>
+            <div class="stat-card__value" id="stat-52h">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__label">52W Low</div>
+            <div class="stat-card__value" id="stat-52l">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__label">Volume</div>
+            <div class="stat-card__value" id="stat-vol">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__label">Market Cap</div>
+            <div class="stat-card__value" id="stat-mcap">—</div>
+          </div>
+        </div>
+
+        <!-- Day Range / 52-Week Range Bars -->
+        <div class="panel">
+          <div class="range-bar" id="day-range-bar">
+            <div class="range-bar__label">
+              <span id="day-range-low">—</span>
+              <span style="color: var(--text-dim); font-weight: 600;">Day Range</span>
+              <span id="day-range-high">—</span>
+            </div>
+            <div class="range-bar__track">
+              <div class="range-bar__fill" id="day-range-fill" style="width: 50%;"></div>
+              <div class="range-bar__marker" id="day-range-marker" style="left: 50%;"></div>
+            </div>
+          </div>
+          <div class="range-bar" id="week52-range-bar">
+            <div class="range-bar__label">
+              <span id="w52-range-low">—</span>
+              <span style="color: var(--text-dim); font-weight: 600;">52-Week Range</span>
+              <span id="w52-range-high">—</span>
+            </div>
+            <div class="range-bar__track">
+              <div class="range-bar__fill" id="w52-range-fill" style="width: 50%;"></div>
+              <div class="range-bar__marker" id="w52-range-marker" style="left: 50%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Institutional Interactive Trading Graph -->
+        <div class="panel chart-panel" id="main-chart-panel">
+          <div class="chart-header-bar">
+            <div class="chart-header-left">
+              <span class="chart-title">Trading Graph</span>
+              <span class="panel__head-note" id="chart-source-note">Loading data...</span>
+            </div>
+
+            <!-- Controls Toolbar -->
+            <div class="chart-controls">
+              <!-- Timeframes -->
+              <div class="chart-group chart-timeframes" id="chart-timeframes">
+                <button class="tf-btn" data-period="1d" title="1 Day (5-min Intraday)">1D</button>
+                <button class="tf-btn" data-period="5d" title="5 Days">5D</button>
+                <button class="tf-btn" data-period="1mo" title="1 Month">1M</button>
+                <button class="tf-btn" data-period="3mo" title="3 Months">3M</button>
+                <button class="tf-btn active" data-period="6mo" title="6 Months">6M</button>
+                <button class="tf-btn" data-period="1y" title="1 Year">1Y</button>
+                <button class="tf-btn" data-period="2y" title="2 Years">2Y</button>
+                <button class="tf-btn" data-period="max" title="Max History">ALL</button>
+              </div>
+
+              <div class="chart-sep"></div>
+
+              <!-- Chart Type: Candles, Line, Area -->
+              <div class="chart-group chart-types" id="chart-types">
+                <button class="chart-tool-btn active" data-type="candles" id="btn-type-candles"
+                  title="Candlestick Chart">🕯️ Candles</button>
+                <button class="chart-tool-btn" data-type="line" id="btn-type-line" title="Line Chart">📈 Line</button>
+                <button class="chart-tool-btn" data-type="area" id="btn-type-area" title="Area Chart">🌊 Area</button>
+              </div>
+
+              <div class="chart-sep"></div>
+
+              <!-- Overlays & Indicators -->
+              <div class="chart-group chart-indicators">
+                <button class="chart-tool-btn active" id="btn-toggle-vol" title="Toggle Volume Sub-Pane">📊 Vol</button>
+                <button class="chart-tool-btn active" id="btn-toggle-ma20" title="Toggle 20-Day Moving Average">MA
+                  20</button>
+                <button class="chart-tool-btn active" id="btn-toggle-ma50" title="Toggle 50-Day Moving Average">MA
+                  50</button>
+                <button class="chart-tool-btn active" id="btn-toggle-cone" title="Toggle AI Projection Cone (30d)">🔮 AI
+                  Cone</button>
+              </div>
+
+              <div class="chart-sep"></div>
+
+              <!-- Utilities -->
+              <div class="chart-group chart-actions">
+                <button class="chart-tool-btn" id="btn-chart-refresh" title="Sync Live Market Data">⚡ Live Sync</button>
+                <button class="chart-tool-btn" id="btn-chart-reset" title="Reset View & Fit Content">↺ Reset</button>
+                <button class="chart-tool-btn" id="btn-chart-fullscreen" title="Toggle Fullscreen">⛶</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic OHLCV Legend HUD Bar -->
+          <div class="chart-hud" id="chart-hud">
+            <span class="hud-item hud-symbol" id="hud-symbol">AAPL</span>
+            <span class="hud-item"><span class="hud-label">O</span> <span class="hud-val" id="hud-open">--</span></span>
+            <span class="hud-item"><span class="hud-label">H</span> <span class="hud-val" id="hud-high">--</span></span>
+            <span class="hud-item"><span class="hud-label">L</span> <span class="hud-val" id="hud-low">--</span></span>
+            <span class="hud-item"><span class="hud-label">C</span> <span class="hud-val"
+                id="hud-close">--</span></span>
+            <span class="hud-item"><span class="hud-label">CHG</span> <span class="hud-val"
+                id="hud-change">--</span></span>
+            <span class="hud-item"><span class="hud-label">VOL</span> <span class="hud-val"
+                id="hud-vol">--</span></span>
+            <span class="hud-item hud-ma20" id="hud-ma20-wrap"><span class="hud-label"
+                style="color: #2962ff;">MA20</span> <span class="hud-val" id="hud-ma20">--</span></span>
+            <span class="hud-item hud-ma50" id="hud-ma50-wrap"><span class="hud-label"
+                style="color: #ff9800;">MA50</span> <span class="hud-val" id="hud-ma50">--</span></span>
+            <span class="hud-item hud-cone" id="hud-cone-wrap"><span class="hud-label"
+                style="color: #00d4aa;">AI Proj</span> <span class="hud-val" id="hud-cone">--</span></span>
+            <span class="hud-item hud-var" id="hud-var-wrap"><span class="hud-label"
+                style="color: #ff4757;">VaR/CVaR</span> <span class="hud-val" id="hud-var">--</span></span>
+            <span class="hud-item hud-date" id="hud-date">--</span>
+          </div>
+
+          <!-- AI Predictive Trade Forecast & Recommendation Ribbon -->
+          <div class="ai-forecast-bar" id="ai-forecast-bar">
+            <div class="forecast-badge-wrap">
+              <span class="forecast-label">AI Signal:</span>
+              <span class="forecast-pill" id="fc-recommendation">🟢 BUY / ACCUMULATE</span>
+            </div>
+            <div class="forecast-metrics">
+              <div class="fc-metric">
+                <span class="fc-metric-label">Target (Upside):</span>
+                <span class="fc-metric-val pos" id="fc-target">$345.50 (+2.8%)</span>
+              </div>
+              <div class="fc-metric">
+                <span class="fc-metric-label">Stop-Loss (Downside):</span>
+                <span class="fc-metric-val neg" id="fc-stop">$328.20 (-2.4%)</span>
+              </div>
+              <div class="fc-metric">
+                <span class="fc-metric-label">Win Probability:</span>
+                <span class="fc-metric-val" id="fc-prob">58.8%</span>
+              </div>
+              <div class="fc-metric">
+                <span class="fc-metric-label">Risk / Reward:</span>
+                <span class="fc-metric-val" id="fc-rr">1 : 2.2</span>
+              </div>
+            </div>
+            <div class="forecast-action">
+              <button class="btn btn--small btn--buy" id="btn-fc-quick-trade">⚡ Easy Trade</button>
+            </div>
+          </div>
+
+          <!-- TradingView Chart Viewport -->
+          <div class="chart-container tv-container-wrap" id="tv-chart-wrapper">
+            <div id="tv-chart" style="width: 100%; height: 100%;"></div>
+          </div>
+        </div>
+
+        <!-- Live Analysis Verdict Banner (Lower Section below Trading Graph) -->
+        <div class="panel analysis-verdict-banner" id="analysis-verdict-banner" style="display: none;">
+          <div class="verdict-banner__left">
+            <div class="verdict-banner__title">
+              <span class="verdict-icon">⚡</span>
+              <span>AI Multi-Agent Consensus:</span>
+              <span class="signal-badge" id="vb-decision">HOLD</span>
+            </div>
+            <p class="verdict-banner__reason" id="vb-reason">Analyzing stock market dynamics...</p>
+            <div class="verdict-banner__agents" id="vb-pills"></div>
+          </div>
+          <div class="verdict-banner__right">
+            <div class="verdict-metric">
+              <span class="verdict-metric__label">Conviction</span>
+              <span class="verdict-metric__val" id="vb-confidence">--</span>
+            </div>
+            <div class="verdict-metric">
+              <span class="verdict-metric__label">Target Alloc</span>
+              <span class="verdict-metric__val" id="vb-alloc">--</span>
+            </div>
+            <button class="btn btn--small" id="vb-view-agents-btn">View All 8 Agents →</button>
+          </div>
+        </div>
+
+        <!-- Company Profile Summary -->
+        <div class="panel" id="company-summary-panel">
+          <div class="panel__head">Company Profile</div>
+          <div class="panel__body" id="company-summary">
+            <p class="kv-empty">Loading company information...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SECTION: AI AGENTS ═══════════════════════════════════ -->
+      <div class="section" id="sec-agents">
+
+        <!-- Dynamic Agent Router -->
+        <div class="panel router-banner">
+          <div class="panel__head">
+            Dynamic Agent Router
+            <span class="panel__head-note" id="router-reason">Waiting for analysis...</span>
+            <button class="btn btn--small btn--primary" id="agents-run-analysis-btn"
+              style="margin-left:auto; font-size:11px;">⚡ Run Multi-Agent Analysis</button>
+          </div>
+          <div class="panel__body">
+            <div class="router-pills" id="router-agents-container">
+              <span class="agent-pill">AWAITING ANALYSIS</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Agent Consensus Matrix -->
+        <div class="panel">
+          <div class="panel__head">Agent Consensus Matrix</div>
+          <div style="overflow-x: auto;">
+            <table class="consensus-table" id="consensus-table">
+              <thead>
+                <tr>
+                  <th>Agent</th>
+                  <th>Vote</th>
+                  <th>Score</th>
+                  <th>Confidence</th>
+                  <th>Rationale</th>
+                </tr>
+              </thead>
+              <tbody id="consensus-body">
+                <tr>
+                  <td colspan="5" class="kv-empty">Run analysis to see agent votes.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 5-Dimension Confidence Engine -->
+        <div class="panel">
+          <div class="panel__head">Multi-Dimensional Confidence Engine</div>
+          <div class="panel__body" id="confidence-container">
+            <div class="confidence-row">
+              <div class="confidence-row__header"><span>Signal Confidence (Agreement)</span><span
+                  class="confidence-row__value" id="val-sig-conf">—</span></div>
+              <div class="confidence-bar-wrap">
+                <div class="confidence-bar-fill" id="bar-sig-conf" style="width: 0%;"></div>
+              </div>
+            </div>
+            <div class="confidence-row">
+              <div class="confidence-row__header"><span>Prediction Confidence (ML Entropy)</span><span
+                  class="confidence-row__value" id="val-pred-conf">—</span></div>
+              <div class="confidence-bar-wrap">
+                <div class="confidence-bar-fill" id="bar-pred-conf" style="width: 0%;"></div>
+              </div>
+            </div>
+            <div class="confidence-row">
+              <div class="confidence-row__header"><span>Evidence Quality (RAG Grounding)</span><span
+                  class="confidence-row__value" id="val-ev-conf">—</span></div>
+              <div class="confidence-bar-wrap">
+                <div class="confidence-bar-fill" id="bar-ev-conf" style="width: 0%;"></div>
+              </div>
+            </div>
+            <div class="confidence-row">
+              <div class="confidence-row__header"><span>Market Stability (Regime/Vol)</span><span
+                  class="confidence-row__value" id="val-stab-conf">—</span></div>
+              <div class="confidence-bar-wrap">
+                <div class="confidence-bar-fill" id="bar-stab-conf" style="width: 0%;"></div>
+              </div>
+            </div>
+            <div class="confidence-row">
+              <div class="confidence-row__header"><span>Risk Engine Confidence (VaR Buffer)</span><span
+                  class="confidence-row__value" id="val-risk-conf">—</span></div>
+              <div class="confidence-bar-wrap">
+                <div class="confidence-bar-fill" id="bar-risk-conf" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Crash Risk & Alpha Engine -->
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel__head">Crash / Tail-Risk Agent <span class="panel__head-note"
+                id="crash-tier-badge"></span></div>
+            <div class="panel__body" id="crash-risk-container">
+              <p class="kv-empty">Run analysis to evaluate tail-risk.</p>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel__head">Adaptive Alpha Signal Engine <span class="panel__head-note"
+                id="alpha-bias-badge"></span></div>
+            <div class="panel__body" id="alpha-engine-container">
+              <p class="kv-empty">Run analysis to compute alpha decomposition.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Critic & Counterfactual -->
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel__head">Critic Agent · Devil's Advocate</div>
+            <div class="panel__body" id="critic-card-container">
+              <p class="kv-empty">Run analysis to see critic contradictions.</p>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel__head">Counterfactual Explanation <span class="panel__head-note"
+                id="cf-stability-badge"></span></div>
+            <div class="panel__body" id="counterfactual-container">
+              <p class="kv-empty">Run analysis to see contrastive scenarios.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Technical & ML Grids -->
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel__head">Technical Indicators</div>
+            <div class="kv-grid" id="technical-grid">
+              <p class="kv-empty">Run analysis to populate.</p>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel__head">ML Prediction · Market Regime</div>
+            <div class="kv-grid" id="prediction-grid">
+              <p class="kv-empty">Run analysis to populate.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full Audit Trail -->
+        <div class="panel">
+          <div class="panel__head">Agent Reasoning · Full Research Audit Trail</div>
+          <ol class="audit-trail" id="audit-trail">
+            <li>No decision run yet. Click "Analyze" to start.</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- ═══ SECTION: EVIDENCE & RAG ═════════════════════════════ -->
+      <div class="section" id="sec-evidence">
+
+        <div class="panel">
+          <div class="panel__head">
+            Financial Evidence · Temporal RAG Grounding
+            <button class="btn btn--small btn--ghost" id="eval-rag-adversarial-btn">🛡️ Adversarial Test</button>
+          </div>
+
+          <!-- Aspect filter tabs -->
+          <div class="aspect-tabs" id="aspect-tabs">
+            <button class="aspect-tab active" data-aspect="general">All Evidence</button>
+            <button class="aspect-tab" data-aspect="revenue">Revenue</button>
+            <button class="aspect-tab" data-aspect="margins">Margins</button>
+            <button class="aspect-tab" data-aspect="debt">Debt</button>
+            <button class="aspect-tab" data-aspect="risk">Risk Factors</button>
+          </div>
+
+          <div id="rag-citations-container" style="padding: 12px 16px;">
+            <p class="kv-empty">No evidence retrieved yet.</p>
+          </div>
+
+          <div id="rag-eval-result-container" style="display:none; padding: 12px 16px;"></div>
+
+          <form class="rag-search" id="rag-search-form">
+            <input type="text" id="rag-query-input" placeholder="Ask about filings — e.g. 'What was the revenue?'"
+              autocomplete="off">
+            <button type="submit" class="btn btn--small">Search</button>
+          </form>
+        </div>
+
+        <!-- Knowledge Graph -->
+        <div class="panel">
+          <div class="panel__head">
+            Financial Knowledge Graph
+            <span class="panel__head-note" id="graph-summary-note"></span>
+          </div>
+          <div class="graph-section" id="graph-entities-container">
+            <p class="kv-empty">Loading financial ontology relations...</p>
+          </div>
+        </div>
+
+        <!-- Temporal Firewall -->
+        <div class="panel">
+          <div class="panel__head">Temporal Firewall Audit</div>
+          <div class="panel__body" id="firewall-audit-container">
+            <p class="kv-empty">Loading firewall status...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SECTION: RISK & PORTFOLIO ═══════════════════════════ -->
+      <div class="section" id="sec-risk">
+
+        <!-- ── Persistent Daily Loss & Anti-Revenge Cooldown Panel ───── -->
+        <div class="panel" style="margin-bottom: 16px;">
+          <div class="panel__head" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>🛑 Persistent Daily Loss Protection &amp; Anti-Revenge Controls</span>
+            <span class="sidebar__header-badge" id="risk-guard-status-badge">NORMAL</span>
+          </div>
+          <div class="panel__body">
+            <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 12px;">
+              Enforces hard daily loss threshold (-3.0%) and automatic 60-minute cooling period after 3 consecutive losses. State persists across application restarts in database table <code style="color: #00d4aa;">daily_risk_state</code>.
+            </div>
+            <div class="stat-row">
+              <div class="stat"><span class="stat__label">Trading Day (UTC)</span>
+                <div class="stat__value" id="risk-guard-date" style="font-size: 14px;">----/--/--</div>
+              </div>
+              <div class="stat"><span class="stat__label">Day Starting Baseline</span>
+                <div class="stat__value" id="risk-guard-baseline">$100,000.00</div>
+              </div>
+              <div class="stat"><span class="stat__label">Today's Net P&amp;L</span>
+                <div class="stat__value" id="risk-guard-daily-pnl">$0.00 (0.00%)</div>
+              </div>
+              <div class="stat"><span class="stat__label">Loss Allowance Left</span>
+                <div class="stat__value" id="risk-guard-allowance" style="color: #00d4aa;">$3,000.00</div>
+              </div>
+            </div>
+            <div class="stat-row" style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-color);">
+              <div class="stat"><span class="stat__label">Consecutive Losses</span>
+                <div class="stat__value" id="risk-guard-losses">0 / 3</div>
+              </div>
+              <div class="stat"><span class="stat__label">Cooldown State</span>
+                <div class="stat__value" id="risk-guard-cooldown-text" style="font-size: 13px;">Idle (No Lock)</div>
+              </div>
+              <div class="stat"><span class="stat__label">Simulated Entries</span>
+                <div class="stat__value" id="risk-guard-entry-perm" style="color: #00d4aa; font-weight: 700;">ALLOWED</div>
+              </div>
+              <div class="stat"><span class="stat__label">Administrative Override</span>
+                <button class="btn btn--small btn--ghost" id="risk-guard-reset-btn" type="button" style="font-size: 11px; padding: 3px 8px; margin-top: 4px;">Reset Lock</button>
+              </div>
+            </div>
+            <div id="risk-guard-alert-box" style="display: none; margin-top: 12px; padding: 10px 14px; border-radius: 4px; font-size: 12px;"></div>
+          </div>
+        </div>
+
+        <!-- ── Trade Setup Quality Gate & Position Sizing Evaluator ──── -->
+        <div class="panel" style="margin-bottom: 16px;">
+          <div class="panel__head" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>🛡️ Trade Setup Quality Gate &amp; Mathematical Position Sizer</span>
+            <span class="sidebar__header-badge" id="qg-decision-badge">STANDBY</span>
+          </div>
+          <div class="panel__body">
+            <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 14px;">
+              Validates proposed trades against all 8 risk dimensions before simulated entry: market data freshness, daily risk guard, stop distance, R/R threshold, gross leverage, currency concentration, regime suitability, and historical strategy validation.
+            </div>
+
+            <!-- Evaluator Form Row -->
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 14px; background: rgba(18, 24, 38, 0.5); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+              <div style="min-width: 130px; flex: 1;">
+                <label class="tm-label">Symbol / Instrument</label>
+                <select id="qg-sym-input" class="tm-input" style="width: 100%;">
+                  <optgroup label="Stocks">
+                    <option value="AAPL" selected>AAPL · Apple</option>
+                    <option value="MSFT">MSFT · Microsoft</option>
+                    <option value="NVDA">NVDA · NVIDIA</option>
+                    <option value="AMZN">AMZN · Amazon</option>
+                    <option value="GOOGL">GOOGL · Alphabet</option>
+                    <option value="TSLA">TSLA · Tesla</option>
+                  </optgroup>
+                  <optgroup label="Forex G10 Pairs">
+                    <option value="EUR/USD">EUR/USD · Euro</option>
+                    <option value="GBP/USD">GBP/USD · British Pound</option>
+                    <option value="USD/JPY">USD/JPY · Japanese Yen</option>
+                    <option value="AUD/USD">AUD/USD · Australian Dollar</option>
+                    <option value="USD/CAD">USD/CAD · Canadian Dollar</option>
+                  </optgroup>
+                </select>
+              </div>
+              <div style="min-width: 90px;">
+                <label class="tm-label">Side</label>
+                <select id="qg-side-input" class="tm-input" style="width: 100%;">
+                  <option value="BUY" selected>BUY / LONG</option>
+                  <option value="SELL">SELL / SHORT</option>
+                </select>
+              </div>
+              <div style="min-width: 110px; flex: 1;">
+                <label class="tm-label">Entry Price ($)</label>
+                <input type="number" id="qg-entry-input" step="0.0001" value="225.00" class="tm-input" style="width: 100%; font-family: var(--font-mono);">
+              </div>
+              <div style="min-width: 110px; flex: 1;">
+                <label class="tm-label">Stop-Loss Price ($)</label>
+                <input type="number" id="qg-stop-input" step="0.0001" value="220.00" class="tm-input" style="width: 100%; font-family: var(--font-mono);">
+              </div>
+              <div style="min-width: 110px; flex: 1;">
+                <label class="tm-label">Profit Target ($)</label>
+                <input type="number" id="qg-target-input" step="0.0001" value="235.00" class="tm-input" style="width: 100%; font-family: var(--font-mono);">
+              </div>
+              <div>
+                <button class="btn btn--buy" id="qg-eval-btn" type="button" style="padding: 9px 16px;">⚡ Run Quality Gate</button>
+              </div>
+            </div>
+
+            <!-- Gate Evaluation Output Container -->
+            <div id="qg-result-box" style="display: none;">
+              <!-- Sizing Summary Cards -->
+              <div class="stat-row" style="margin-bottom: 12px;">
+                <div class="stat"><span class="stat__label">Risk Budget</span>
+                  <div class="stat__value" id="qg-res-budget" style="color: #00d4aa;">$1,000.00 (1.0%)</div>
+                </div>
+                <div class="stat"><span class="stat__label">Permitted Size</span>
+                  <div class="stat__value" id="qg-res-units" style="font-weight: 700;">—</div>
+                </div>
+                <div class="stat"><span class="stat__label">Notional Value</span>
+                  <div class="stat__value" id="qg-res-notional">—</div>
+                </div>
+                <div class="stat"><span class="stat__label">Est. Risk at Stop</span>
+                  <div class="stat__value" id="qg-res-risk-amt" style="color: var(--red);">—</div>
+                </div>
+                <div class="stat"><span class="stat__label">Risk/Reward</span>
+                  <div class="stat__value" id="qg-res-rr" style="color: var(--yellow);">—</div>
+                </div>
+              </div>
+
+              <!-- 8 Dimension Checks List -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 12px;" id="qg-checks-grid"></div>
+
+              <!-- Explanation Banner -->
+              <div id="qg-explanation-banner" style="padding: 10px 14px; border-radius: 4px; font-size: 12px; line-height: 1.5;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Leverage, Margin & Currency Exposure Panel ────────────── -->
+        <div class="panel" style="margin-bottom: 16px;">
+          <div class="panel__head">
+            <span>💼 Leverage, Margin &amp; Cross-Pair Currency Concentration</span>
+          </div>
+          <div class="panel__body">
+            <div class="stat-row">
+              <div class="stat"><span class="stat__label">Gross Leverage</span>
+                <div class="stat__value" id="exp-gross-leverage">0.00x</div>
+              </div>
+              <div class="stat"><span class="stat__label">Max Leverage Cap</span>
+                <div class="stat__value" id="exp-max-leverage">5.0x / 20.0x</div>
+              </div>
+              <div class="stat"><span class="stat__label">Margin Required</span>
+                <div class="stat__value" id="exp-margin-req">$0.00</div>
+              </div>
+              <div class="stat"><span class="stat__label">Free Margin</span>
+                <div class="stat__value" id="exp-free-margin" style="color: #00d4aa;">$100,000.00</div>
+              </div>
+            </div>
+            <div style="margin-top: 14px;">
+              <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px;">
+                Aggregate Currency Exposure (% of Portfolio Equity):
+              </div>
+              <div id="exp-currency-bars" style="display: flex; flex-direction: column; gap: 8px;">
+                <p class="kv-empty" style="padding: 4px 0;">No active Forex currency exposure.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Portfolio -->
+        <div class="panel">
+          <div class="panel__head">Portfolio</div>
+          <div class="panel__body">
+            <div class="stat-row">
+              <div class="stat"><span class="stat__label">Portfolio Value</span>
+                <div class="stat__value" id="stat-portfolio-value">$100,000.00</div>
+              </div>
+              <div class="stat"><span class="stat__label">Cash</span>
+                <div class="stat__value" id="stat-cash">$100,000.00</div>
+              </div>
+            </div>
+            <div class="stat-row">
+              <div class="stat"><span class="stat__label">Realized P&amp;L</span>
+                <div class="stat__value" id="stat-realized-pnl">$0.00</div>
+              </div>
+              <div class="stat"><span class="stat__label">Total Return</span>
+                <div class="stat__value" id="stat-total-return">0.00%</div>
+              </div>
+            </div>
+          </div>
+          <div id="positions-list" style="padding: 0 16px 12px;">
+            <p class="kv-empty">No open positions.</p>
+          </div>
+        </div>
+
+        <!-- Risk Metrics -->
+        <div class="panel">
+          <div class="panel__head">
+            Risk Status · Adaptive Budget
+            <span class="panel__head-note" id="risk-budget-multiplier-badge">1.00x Budget</span>
+          </div>
+          <div class="panel__body">
+            <div class="stat-row">
+              <div class="stat"><span class="stat__label">Exposure</span>
+                <div class="stat__value" id="stat-exposure">0.0%</div>
+              </div>
+              <div class="stat"><span class="stat__label">VaR 95%</span>
+                <div class="stat__value" id="stat-var">—</div>
+              </div>
+            </div>
+            <div class="stat-row">
+              <div class="stat"><span class="stat__label">CVaR 95%</span>
+                <div class="stat__value" id="stat-cvar">—</div>
+              </div>
+              <div class="stat"><span class="stat__label">Max Drawdown</span>
+                <div class="stat__value" id="stat-mdd">—</div>
+              </div>
+            </div>
+            <div class="stat-row" style="margin-top: 4px; padding-top: 8px; border-top: 1px dashed var(--border);">
+              <div class="stat"><span class="stat__label">Adaptive Max Pos</span>
+                <div class="stat__value" id="stat-dyn-pos">10.0%</div>
+              </div>
+              <div class="stat"><span class="stat__label">Target Cash Buffer</span>
+                <div class="stat__value" id="stat-dyn-cash">70.0%</div>
+              </div>
+            </div>
+          </div>
+          <div id="risk-limits" style="padding: 4px 16px 12px;"></div>
+        </div>
+
+        <!-- Stress Testing -->
+        <div class="panel">
+          <div class="panel__head">
+            Market Stress Testing Agent
+            <div style="display: flex; gap: 6px;">
+              <button class="btn btn--small" id="run-full-stress-btn">⚡ Standard (7 Scenarios)</button>
+              <button class="btn btn--small btn--ghost" id="run-hist-stress-btn">📜 Historical Replay</button>
+            </div>
+          </div>
+          <div class="backtest-note" id="stress-summary-verdict">
+            Simulates acute shocks without mutating live paper portfolio.
+          </div>
+          <!-- Custom Stress Builder -->
+          <details class="stress-builder">
+            <summary style="cursor:pointer; font-size:11px; font-weight:600; color:var(--text-dim);">⚙️ Custom Scenario
+              Builder</summary>
+            <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-top:8px;">
+              <div>
+                <label class="field-label">Price Shock %</label>
+                <input type="number" id="custom-shock-pct" value="-15" step="1" min="-90" max="50">
+              </div>
+              <div>
+                <label class="field-label">Vol Multiplier</label>
+                <input type="number" id="custom-vol-mult" value="1.5" step="0.1" min="0.5" max="5.0">
+              </div>
+              <div>
+                <label class="field-label">Sentiment</label>
+                <input type="number" id="custom-sent-override" value="-0.5" step="0.1" min="-1.0" max="1.0">
+              </div>
+              <button class="btn btn--small" id="run-custom-stress-btn">Simulate Custom</button>
+            </div>
+          </details>
+          <div style="overflow-x: auto; padding: 0 16px 12px;">
+            <table class="data-table" id="stress-test-table">
+              <thead>
+                <tr>
+                  <th>Scenario</th>
+                  <th>Portfolio Impact</th>
+                  <th>Stressed VaR-95</th>
+                  <th>Stressed CVaR-95</th>
+                  <th>Max DD</th>
+                  <th>Policy Status</th>
+                </tr>
+              </thead>
+              <tbody id="stress-test-body">
+                <tr>
+                  <td colspan="6" class="kv-empty">Click "Run Stress Simulation" to compute.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- What-If Simulator -->
+        <div class="panel scenario-panel">
+          <div class="panel__head">What-If Simulator</div>
+          <div class="panel__body">
+            <label class="field-label" for="vol-slider">Volatility multiplier: <span
+                id="vol-slider-value">1.0×</span></label>
+            <input type="range" id="vol-slider" min="0.5" max="3" step="0.1" value="1.0">
+            <button class="btn btn--small" id="run-scenario-btn">Recompute risk</button>
+            <div class="scenario-result" id="scenario-result"></div>
+          </div>
+        </div>
+
+        <!-- Recent Trades -->
+        <div class="panel">
+          <div class="panel__head">Recent Paper Trades</div>
+          <div id="recent-trades-list" style="padding: 8px 16px; max-height: 200px; overflow-y: auto;">
+            <p class="kv-empty">No recent trades.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SECTION: NEWS ════════════════════════════════════════ -->
+      <div class="section" id="sec-news">
+
+        <!-- Market Overview -->
+        <div class="panel">
+          <div class="panel__head">Market Overview</div>
+          <div class="market-overview-grid" id="market-overview-grid">
+            <p class="kv-empty">Loading market data...</p>
+          </div>
+        </div>
+
+        <!-- News Feed -->
+        <div class="panel">
+          <div class="panel__head">
+            Latest News
+            <button class="btn btn--small btn--ghost" id="refresh-news-btn">↻ Refresh</button>
+          </div>
+          <div id="news-list">
+            <p class="kv-empty" style="padding: 20px 16px;">Loading news...</p>
+          </div>
+        </div>
+
+        <!-- Sentiment Summary -->
+        <div class="panel">
+          <div class="panel__head">Sentiment Analysis Summary</div>
+          <div class="panel__body" id="sentiment-summary-container">
+            <p class="kv-empty">Run news analysis to see sentiment breakdown.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SECTION: BACKTEST ════════════════════════════════════ -->
+      <div class="section" id="sec-backtest">
+        <div class="panel">
+          <div class="panel__head">
+            Backtest · Ablation Study
+            <button class="btn btn--small" id="run-backtest-btn">⚡ Run Study</button>
+          </div>
+          <div class="backtest-note" id="backtest-note">Compares Buy &amp; Hold against progressively richer agent
+            combinations.</div>
+          <div style="overflow-x: auto; padding: 0 16px 12px;">
+            <table class="data-table" id="backtest-table">
+              <thead>
+                <tr>
+                  <th>Strategy</th>
+                  <th>Total Return</th>
+                  <th>Sharpe</th>
+                  <th>Sortino</th>
+                  <th>Max Drawdown</th>
+                  <th>Win Rate</th>
+                  <th>Trades</th>
+                </tr>
+              </thead>
+              <tbody id="backtest-body">
+                <tr>
+                  <td colspan="7" class="kv-empty">Not run yet. Click "Run Study" to start.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SECTION: LONG-TERM INVESTMENT DASHBOARD ═══════════════ -->
+      <div class="section" id="sec-long-term-dashboard">
+
+        <!-- Long-Term Dashboard Header -->
+        <div class="lt-dash-header">
+          <div class="lt-dash-header__left">
+            <div class="lt-dash-header__mark">🏦</div>
+            <div>
+              <div class="lt-dash-header__title">Long-Term Investment Dashboard</div>
+              <div class="lt-dash-header__subtitle">Fundamental Research · Portfolio Planning · Wealth Builder</div>
+            </div>
+          </div>
+          <div class="lt-dash-header__right">
+            <div class="lt-dash-mode"><span class="lt-mode-dot"></span> RESEARCH MODE</div>
+          </div>
+        </div>
+
+        <!-- Long-Term Quick Stats Ribbon -->
+        <div class="lt-stats-ribbon">
+          <div class="lt-ribbon-stat">
+            <div class="lt-ribbon-stat__label">Portfolio Goal</div>
+            <div class="lt-ribbon-stat__value" id="ltd-goal">₹5,00,000</div>
+          </div>
+          <div class="lt-ribbon-stat">
+            <div class="lt-ribbon-stat__label">Investment Horizon</div>
+            <div class="lt-ribbon-stat__value" id="ltd-horizon-display">3 Years</div>
+          </div>
+          <div class="lt-ribbon-stat">
+            <div class="lt-ribbon-stat__label">Risk Profile</div>
+            <div class="lt-ribbon-stat__value" id="ltd-risk-display" style="color: var(--yellow);">Moderate</div>
+          </div>
+          <div class="lt-ribbon-stat">
+            <div class="lt-ribbon-stat__label">Monthly SIP</div>
+            <div class="lt-ribbon-stat__value" id="ltd-sip-display">₹10,000</div>
+          </div>
+          <div class="lt-ribbon-stat">
+            <div class="lt-ribbon-stat__label">Projected Returns</div>
+            <div class="lt-ribbon-stat__value" id="ltd-projected-ret" style="color: var(--green);">—</div>
+          </div>
+          <div class="lt-ribbon-stat">
+            <div class="lt-ribbon-stat__label">Risk Score</div>
+            <div class="lt-ribbon-stat__value" id="ltd-risk-score" style="color: var(--cyan);">—</div>
+          </div>
+        </div>
+
+        <!-- Long-Term Investment Planner Controls -->
+        <div class="panel lt-planner-panel">
+          <div class="panel__head">
+            <div class="lt-planner-head-left">
+              <span class="lt-planner-icon">🧠</span>
+              <span>AI-Powered Investment Planner</span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn--small btn--ghost" id="ltd-reset-btn" type="button">↺ Reset</button>
+              <button class="btn btn--small btn--buy lt-generate-pulse" id="ltd-generate-btn" type="button">⚡ Generate Investment Plan</button>
+            </div>
+          </div>
+          <div class="panel__body lt-planner-grid">
+            <div class="lt-planner-field">
+              <label class="lt-field-label">💰 Investment Capital</label>
+              <input type="number" id="ltd-capital-input" class="lt-field-input" value="500000" step="10000">
+              <div class="lt-field-hint">Lump-sum starting amount</div>
+            </div>
+            <div class="lt-planner-field">
+              <label class="lt-field-label">📅 Investment Horizon</label>
+              <select id="ltd-horizon-select" class="lt-field-input">
+                <option value="6_months">6 Months</option>
+                <option value="1_year">1 Year</option>
+                <option value="3_years" selected>3 Years</option>
+                <option value="5_years">5 Years</option>
+                <option value="10_years">10 Years</option>
+              </select>
+            </div>
+            <div class="lt-planner-field">
+              <label class="lt-field-label">🛡️ Risk Appetite</label>
+              <select id="ltd-risk-select" class="lt-field-input">
+                <option value="conservative">Conservative (Capital Preservation)</option>
+                <option value="moderate" selected>Moderate (Balanced Growth)</option>
+                <option value="aggressive">Aggressive (High Conviction)</option>
+              </select>
+            </div>
+            <div class="lt-planner-field">
+              <label class="lt-field-label">📊 Monthly SIP</label>
+              <input type="number" id="ltd-sip-input" class="lt-field-input" value="10000" step="1000">
+              <div class="lt-field-hint">Systematic monthly contribution</div>
+            </div>
+            <div class="lt-planner-field">
+              <label class="lt-field-label">📈 Max Per-Stock %</label>
+              <input type="number" id="ltd-max-stock-input" class="lt-field-input" value="30" min="10" max="50">
+            </div>
+            <div class="lt-planner-field">
+              <label class="lt-field-label">🏗️ Max Sector %</label>
+              <input type="number" id="ltd-max-sector-input" class="lt-field-input" value="60" min="20" max="80">
+            </div>
+          </div>
+        </div>
+
+        <!-- Portfolio Overview Cards -->
+        <div class="lt-overview-grid">
+          <div class="lt-overview-card lt-overview-card--return">
+            <div class="lt-card-icon">📈</div>
+            <div class="lt-card-label">Expected Annual Return</div>
+            <div class="lt-card-value" id="ltd-card-return">—</div>
+            <div class="lt-card-hint">Scenario model estimate</div>
+          </div>
+          <div class="lt-overview-card lt-overview-card--vol">
+            <div class="lt-card-icon">🌊</div>
+            <div class="lt-card-label">Portfolio Volatility</div>
+            <div class="lt-card-value" id="ltd-card-vol">—</div>
+            <div class="lt-card-hint">Correlated annual variance</div>
+          </div>
+          <div class="lt-overview-card lt-overview-card--var">
+            <div class="lt-card-icon">⚠️</div>
+            <div class="lt-card-label">Value at Risk (VaR 95%)</div>
+            <div class="lt-card-value" id="ltd-card-var">—</div>
+            <div class="lt-card-hint">1-Day tail loss threshold</div>
+          </div>
+          <div class="lt-overview-card lt-overview-card--cvar">
+            <div class="lt-card-icon">🔻</div>
+            <div class="lt-card-label">CVaR (Expected Shortfall)</div>
+            <div class="lt-card-value" id="ltd-card-cvar">—</div>
+            <div class="lt-card-hint">Expected tail shortfall</div>
+          </div>
+          <div class="lt-overview-card lt-overview-card--cash">
+            <div class="lt-card-icon">💵</div>
+            <div class="lt-card-label">Cash Allocation</div>
+            <div class="lt-card-value" id="ltd-card-cash">—</div>
+            <div class="lt-card-hint">Deterministic risk buffer</div>
+          </div>
+          <div class="lt-overview-card lt-overview-card--sharpe">
+            <div class="lt-card-icon">🏆</div>
+            <div class="lt-card-label">Risk-Adjusted Score</div>
+            <div class="lt-card-value" id="ltd-card-sharpe">—</div>
+            <div class="lt-card-hint">Sharpe ratio estimate</div>
+          </div>
+        </div>
+
+        <!-- Suggested Stock Allocations Table -->
+        <div class="panel" style="margin-bottom: 16px;">
+          <div class="panel__head">
+            <span>📋 Recommended Stock Allocations & Fundamental Scores</span>
+            <span class="panel__head-note" id="ltd-alloc-count"></span>
+          </div>
+          <div style="overflow-x: auto; padding: 0 16px 12px;">
+            <table class="data-table" id="ltd-allocations-table">
+              <thead>
+                <tr>
+                  <th>Stock</th>
+                  <th>Sector</th>
+                  <th>Weight</th>
+                  <th>Capital Allocated</th>
+                  <th>Shares</th>
+                  <th>Fundamental Quality</th>
+                  <th>Growth</th>
+                  <th>Valuation</th>
+                  <th>Stability</th>
+                  <th>Risk Tier</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="ltd-allocations-body">
+                <tr>
+                  <td colspan="11" class="kv-empty">Click "Generate Investment Plan" to compute AI-powered allocations with fundamental research.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Stock Research Cards with RAG Citations -->
+        <div class="panel" style="margin-bottom: 16px;">
+          <div class="panel__head">
+            <span>🔬 Fundamental Research & 10-K RAG Citations</span>
+          </div>
+          <div class="panel__body" id="ltd-cards-container" style="display: flex; flex-direction: column; gap: 14px;">
+            <p class="kv-empty">Stock-specific rationales, 10-K citations, accumulation triggers, and exit conditions will appear here after plan generation.</p>
+          </div>
+        </div>
+
+        <!-- Sector Diversification Visual -->
+        <div class="panel" style="margin-bottom: 16px;">
+          <div class="panel__head">
+            <span>🏗️ Sector Diversification & Portfolio Composition</span>
+          </div>
+          <div class="panel__body">
+            <div id="ltd-sector-bars" style="display: flex; flex-direction: column; gap: 8px;">
+              <p class="kv-empty">Sector allocation breakdown will appear after plan generation.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- SIP Simulation Panel -->
+        <div class="panel" id="ltd-sip-panel" style="margin-bottom: 16px;">
+          <div class="panel__head">
+            <span>💹 SIP Wealth Accumulation Simulation</span>
+            <span id="ltd-sip-summary-badge" style="font-size: 12px; font-weight: 600; color: var(--green);"></span>
+          </div>
+          <div class="panel__body">
+            <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 12px;">
+              Historical scenario projection demonstrating disciplined periodic contributions, compounding, and downside volatility management.
+            </div>
+            <div style="overflow-x: auto;">
+              <table class="data-table" id="ltd-sip-table">
+                <thead>
+                  <tr>
+                    <th>Period</th>
+                    <th>Total Contributed</th>
+                    <th>Portfolio Value</th>
+                    <th>Gain / Loss</th>
+                    <th>Return %</th>
+                    <th>Simulation Drawdown</th>
+                  </tr>
+                </thead>
+                <tbody id="ltd-sip-body">
+                  <tr>
+                    <td colspan="6" class="kv-empty">Enter a monthly SIP amount and generate a plan to see the wealth simulation.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Risk Assessment for Long-Term -->
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel__head">🛡️ Long-Term Risk Assessment</div>
+            <div class="panel__body">
+              <div class="confidence-row">
+                <div class="confidence-row__header"><span>Fundamental Quality Score</span><span class="confidence-row__value" id="ltd-risk-fundamental">—</span></div>
+                <div class="confidence-bar-wrap">
+                  <div class="confidence-bar-fill" id="ltd-bar-fundamental" style="width: 0%; background: var(--green);"></div>
+                </div>
+              </div>
+              <div class="confidence-row">
+                <div class="confidence-row__header"><span>Diversification Score</span><span class="confidence-row__value" id="ltd-risk-diversification">—</span></div>
+                <div class="confidence-bar-wrap">
+                  <div class="confidence-bar-fill" id="ltd-bar-diversification" style="width: 0%; background: var(--cyan);"></div>
+                </div>
+              </div>
+              <div class="confidence-row">
+                <div class="confidence-row__header"><span>Valuation Margin of Safety</span><span class="confidence-row__value" id="ltd-risk-valuation">—</span></div>
+                <div class="confidence-bar-wrap">
+                  <div class="confidence-bar-fill" id="ltd-bar-valuation" style="width: 0%; background: var(--accent);"></div>
+                </div>
+              </div>
+              <div class="confidence-row">
+                <div class="confidence-row__header"><span>Earnings Stability</span><span class="confidence-row__value" id="ltd-risk-earnings">—</span></div>
+                <div class="confidence-bar-wrap">
+                  <div class="confidence-bar-fill" id="ltd-bar-earnings" style="width: 0%; background: var(--yellow);"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel__head">📊 Investment Confidence Engine</div>
+            <div class="panel__body" id="ltd-confidence-container">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div style="background: var(--bg-panel-2); border-radius: 6px; padding: 14px; text-align: center;">
+                  <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">AI Conviction Level</div>
+                  <div style="font-size: 28px; font-weight: 800; color: var(--green); margin-top: 6px;" id="ltd-conviction">—</div>
+                </div>
+                <div style="background: var(--bg-panel-2); border-radius: 6px; padding: 14px; text-align: center;">
+                  <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Evidence Quality</div>
+                  <div style="font-size: 28px; font-weight: 800; color: var(--cyan); margin-top: 6px;" id="ltd-evidence-quality">—</div>
+                </div>
+                <div style="background: var(--bg-panel-2); border-radius: 6px; padding: 14px; text-align: center;">
+                  <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Market Timing</div>
+                  <div style="font-size: 28px; font-weight: 800; color: var(--yellow); margin-top: 6px;" id="ltd-market-timing">—</div>
+                </div>
+                <div style="background: var(--bg-panel-2); border-radius: 6px; padding: 14px; text-align: center;">
+                  <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Risk Adjusted</div>
+                  <div style="font-size: 28px; font-weight: 800; color: var(--accent-light); margin-top: 6px;" id="ltd-risk-adjusted">—</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="panel" style="margin-top: 16px; border-left: 3px solid var(--yellow);">
+          <div class="panel__body" style="font-size: 11px; color: var(--text-dim); line-height: 1.6; font-style: italic;">
+            ⚠️ <strong>Research Disclaimer:</strong> All projections are scenario-based simulations using historical data and fundamental analysis. Past performance does not guarantee future results. No trade is described as guaranteed or risk-free. This is a research/paper-trading tool — no real orders are placed.
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SECTION: INVESTMENT STRATEGY ═════════════════════════ -->
+      <div class="section" id="sec-investment-strategy">
+        <!-- Strategy Sub-Navigation Tabs -->
+        <div class="strategy-subnav" style="display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
+          <button class="btn btn--small horizon-tab-btn active" id="tab-btn-long-term" data-horizon-tab="long-term" type="button" style="font-weight: 600;">
+            📈 LONG-TERM INVESTMENT
+          </button>
+          <button class="btn btn--small btn--ghost horizon-tab-btn" id="tab-btn-short-term" data-horizon-tab="short-term" type="button" style="font-weight: 600;">
+            ⚡ SHORT-TERM TACTICAL
+          </button>
+          <button class="btn btn--small btn--ghost horizon-tab-btn" id="tab-btn-combined" data-horizon-tab="combined" type="button" style="font-weight: 600;">
+            🌐 COMBINED PORTFOLIO
+          </button>
+        </div>
+
+        <!-- ── TAB PANE 1: LONG-TERM INVESTMENT ─────────────────────── -->
+        <div class="horizon-pane active" id="pane-long-term">
+          <!-- Control Panel -->
+          <div class="panel" style="margin-bottom: 16px;">
+            <div class="panel__head">
+              <span>Long-Term Portfolio Planner &amp; Fundamental Research</span>
+              <button class="btn btn--small btn--buy" id="lt-generate-btn" type="button">⚡ Generate Long-Term Plan</button>
+            </div>
+            <div class="panel__body" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px;">
+              <div>
+                <label class="tm-label">Investment Amount</label>
+                <input type="number" id="lt-capital-input" class="tm-input" value="500000" step="10000" style="width: 100%; font-family: var(--font-mono);">
+              </div>
+              <div>
+                <label class="tm-label">Investment Horizon</label>
+                <select id="lt-horizon-select" class="tm-input" style="width: 100%;">
+                  <option value="6_months">6 Months</option>
+                  <option value="1_year">1 Year</option>
+                  <option value="3_years" selected>3 Years</option>
+                  <option value="5_years">5 Years</option>
+                </select>
+              </div>
+              <div>
+                <label class="tm-label">Risk Preference</label>
+                <select id="lt-risk-select" class="tm-input" style="width: 100%;">
+                  <option value="conservative">Conservative (Capital Preservation)</option>
+                  <option value="moderate" selected>Moderate (Balanced Growth)</option>
+                  <option value="aggressive">Aggressive (High Conviction Growth)</option>
+                </select>
+              </div>
+              <div>
+                <label class="tm-label">Optional Monthly SIP</label>
+                <input type="number" id="lt-sip-input" class="tm-input" value="10000" step="1000" style="width: 100%; font-family: var(--font-mono);">
+              </div>
+              <div>
+                <label class="tm-label">Max Stock Alloc %</label>
+                <input type="number" id="lt-max-stock-input" class="tm-input" value="30" min="10" max="50" style="width: 100%; font-family: var(--font-mono);">
+              </div>
+              <div>
+                <label class="tm-label">Max Sector Alloc %</label>
+                <input type="number" id="lt-max-sector-input" class="tm-input" value="60" min="20" max="80" style="width: 100%; font-family: var(--font-mono);">
+              </div>
+            </div>
+          </div>
+
+          <!-- Risk & Summary Cards -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px;">
+            <div class="panel" style="padding: 12px;">
+              <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Expected Scenario Return</div>
+              <div style="font-size: 15px; font-weight: 700; color: var(--green); margin-top: 4px;" id="lt-summary-return">—</div>
+              <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Scenario model; not guaranteed</div>
+            </div>
+            <div class="panel" style="padding: 12px;">
+              <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Portfolio Volatility</div>
+              <div style="font-size: 15px; font-weight: 700; color: var(--cyan); margin-top: 4px;" id="lt-summary-vol">—</div>
+              <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Correlated annual variance</div>
+            </div>
+            <div class="panel" style="padding: 12px;">
+              <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Value at Risk (VaR 95%)</div>
+              <div style="font-size: 15px; font-weight: 700; color: var(--yellow); margin-top: 4px;" id="lt-summary-var">—</div>
+              <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">1-Day tail loss threshold</div>
+            </div>
+            <div class="panel" style="padding: 12px;">
+              <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Conditional VaR (CVaR 95%)</div>
+              <div style="font-size: 15px; font-weight: 700; color: var(--red); margin-top: 4px;" id="lt-summary-cvar">—</div>
+              <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Expected tail shortfall</div>
+            </div>
+            <div class="panel" style="padding: 12px;">
+              <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Cash Allocation</div>
+              <div style="font-size: 15px; font-weight: 700; color: var(--text); margin-top: 4px;" id="lt-summary-cash">—</div>
+              <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Deterministic risk buffer</div>
+            </div>
+          </div>
+
+          <!-- Suggested Stock Allocations Table -->
+          <div class="panel" style="margin-bottom: 16px;">
+            <div class="panel__head">Suggested Stock Allocations &amp; Fundamental Scores</div>
+            <div style="overflow-x: auto; padding: 0 16px 12px;">
+              <table class="data-table" id="lt-allocations-table">
+                <thead>
+                  <tr>
+                    <th>Stock</th>
+                    <th>Sector</th>
+                    <th>Weight</th>
+                    <th>Capital</th>
+                    <th>Shares</th>
+                    <th>Fundamental Quality</th>
+                    <th>Growth</th>
+                    <th>Valuation</th>
+                    <th>Stability</th>
+                    <th>Risk Tier</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="lt-allocations-body">
+                  <tr>
+                    <td colspan="11" class="kv-empty">Click "Generate Long-Term Plan" to compute allocations using real metrics and RAG citations.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Stock Rationales & Operational Conditions Cards -->
+          <div class="panel" style="margin-bottom: 16px;">
+            <div class="panel__head">Fundamental RAG Evidence &amp; Measurable Decision Rules</div>
+            <div class="panel__body" id="lt-cards-container" style="display: flex; flex-direction: column; gap: 14px;">
+              <p class="kv-empty">Stock-specific rationales, 10-K citations, accumulation triggers, and exit conditions will appear here after generation.</p>
+            </div>
+          </div>
+
+          <!-- SIP / Periodic Simulation Panel -->
+          <div class="panel" id="lt-sip-panel" style="display: none; margin-bottom: 16px;">
+            <div class="panel__head">
+              <span>Periodic Capital Accumulation (SIP Simulation)</span>
+              <span id="lt-sip-summary-badge" style="font-size: 12px; font-weight: 600; color: var(--green);"></span>
+            </div>
+            <div class="panel__body">
+              <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 12px;">
+                Historical scenario projection demonstrating disciplined periodic contributions, compounding, and downside volatility management.
+              </div>
+              <div style="overflow-x: auto;">
+                <table class="data-table" id="lt-sip-table">
+                  <thead>
+                    <tr>
+                      <th>Period</th>
+                      <th>Total Contributed</th>
+                      <th>Portfolio Value</th>
+                      <th>Gain / Loss</th>
+                      <th>Return %</th>
+                      <th>Simulation Drawdown</th>
+                    </tr>
+                  </thead>
+                  <tbody id="lt-sip-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── TAB PANE 2: SHORT-TERM TACTICAL ──────────────────────── -->
+        <div class="horizon-pane" id="pane-short-term" style="display: none;">
+          <!-- Controls -->
+          <div class="panel" style="margin-bottom: 16px;">
+            <div class="panel__head">
+              <span>Tactical Opportunity Scanner &amp; Trade Zones</span>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn--small" id="st-scan-all-btn" type="button">⚡ Scan Watchlist</button>
+                <button class="btn btn--small btn--buy" id="st-analyze-btn" type="button">🔍 Analyze Tactical Setup</button>
+              </div>
+            </div>
+            <div class="panel__body" style="display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end;">
+              <div style="min-width: 140px;">
+                <label class="tm-label">Target Symbol</label>
+                <select id="st-symbol-select" class="tm-input" style="width: 100%;">
+                  <option value="AAPL" selected>AAPL · Apple</option>
+                  <option value="MSFT">MSFT · Microsoft</option>
+                  <option value="NVDA">NVDA · NVIDIA</option>
+                  <option value="AMZN">AMZN · Amazon</option>
+                  <option value="GOOGL">GOOGL · Alphabet</option>
+                  <option value="TSLA">TSLA · Tesla</option>
+                </select>
+              </div>
+              <div style="min-width: 160px;">
+                <label class="tm-label">Tactical Horizon</label>
+                <select id="st-horizon-select" class="tm-input" style="width: 100%;">
+                  <option value="intraday">Intraday</option>
+                  <option value="1_day">1 Day</option>
+                  <option value="1_week" selected>1 Week</option>
+                  <option value="1_4_weeks">1–4 Weeks</option>
+                </select>
+              </div>
+              <div style="min-width: 160px;">
+                <label class="tm-label">Portfolio Sizing Capital</label>
+                <input type="number" id="st-capital-input" class="tm-input" value="100000" style="width: 100%; font-family: var(--font-mono);">
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Tactical Opportunity Overview -->
+          <div id="st-opp-container" style="display: none;">
+            <!-- Header Badges -->
+            <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap;">
+              <div style="font-size: 20px; font-weight: 700; color: var(--text-bright);" id="st-res-symbol">AAPL</div>
+              <div class="signal-badge" id="st-res-signal-badge">BUY</div>
+              <span id="st-res-risk-tier" style="padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase;">LOW RISK</span>
+              <span style="font-size: 13px; color: var(--text-dim);" id="st-res-price">Price: $0.00</span>
+              <span style="margin-left: auto; font-size: 11px; color: var(--text-muted);" id="st-res-regime">Regime: SIDEWAYS</span>
+            </div>
+
+            <!-- Trade Execution Zones Grid -->
+            <div class="panel" style="margin-bottom: 16px;">
+              <div class="panel__head">Quantitative Execution Zones &amp; Risk/Reward Ratio</div>
+              <div class="panel__body" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                <div style="background: rgba(58, 123, 213, 0.08); border-left: 3px solid var(--accent); padding: 10px 14px; border-radius: 0 4px 4px 0;">
+                  <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Entry Target Zone</div>
+                  <div style="font-size: 16px; font-weight: 700; color: var(--accent-light); margin-top: 4px;" id="st-zone-entry">—</div>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;" id="st-zone-entry-range">Range: —</div>
+                </div>
+                <div style="background: rgba(0, 212, 170, 0.08); border-left: 3px solid var(--green); padding: 10px 14px; border-radius: 0 4px 4px 0;">
+                  <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Target Zone (Base)</div>
+                  <div style="font-size: 16px; font-weight: 700; color: var(--green); margin-top: 4px;" id="st-zone-target">—</div>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;" id="st-zone-target-range">Conservative: —</div>
+                </div>
+                <div style="background: rgba(255, 71, 87, 0.08); border-left: 3px solid var(--red); padding: 10px 14px; border-radius: 0 4px 4px 0;">
+                  <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Stop-Loss (Hard Exit)</div>
+                  <div style="font-size: 16px; font-weight: 700; color: var(--red); margin-top: 4px;" id="st-zone-stop">—</div>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;" id="st-zone-stop-dist">Distance: —</div>
+                </div>
+                <div style="background: rgba(255, 165, 2, 0.08); border-left: 3px solid var(--yellow); padding: 10px 14px; border-radius: 0 4px 4px 0;">
+                  <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase;">Risk / Reward Ratio</div>
+                  <div style="font-size: 16px; font-weight: 700; color: var(--yellow); margin-top: 4px;" id="st-zone-rr">—</div>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Minimum required: 1:1.5</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Position Sizing & Deterministic Risk Constraints -->
+            <div class="panel" style="margin-bottom: 16px;">
+              <div class="panel__head">Deterministic Risk Engine &amp; Capital Allocation</div>
+              <div class="panel__body" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                <div>
+                  <div style="font-size: 11px; color: var(--text-dim);">Recommended Position</div>
+                  <div style="font-size: 15px; font-weight: 700; color: var(--text-bright); margin-top: 4px;" id="st-pos-pct">—</div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; color: var(--text-dim);">Sized Capital</div>
+                  <div style="font-size: 15px; font-weight: 700; color: var(--text-bright); margin-top: 4px;" id="st-pos-cap">—</div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; color: var(--text-dim);">Shares Sized</div>
+                  <div style="font-size: 15px; font-weight: 700; color: var(--text-bright); margin-top: 4px;" id="st-pos-shares">—</div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; color: var(--text-dim);">Maximum Risk at Stop</div>
+                  <div style="font-size: 15px; font-weight: 700; color: var(--red); margin-top: 4px;" id="st-pos-maxloss">—</div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; color: var(--text-dim);">Daily 95% VaR / CVaR</div>
+                  <div style="font-size: 15px; font-weight: 700; color: var(--text-bright); margin-top: 4px;" id="st-pos-var">—</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Specialized Agent Postures & Confidence Dimensions -->
+            <div class="panel" style="margin-bottom: 16px;">
+              <div class="panel__head">Short-Term Multi-Agent Signals &amp; Horizon-Aware Confidence</div>
+              <div class="panel__body" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div>
+                  <div style="font-size: 12px; font-weight: 600; color: var(--text-bright); margin-bottom: 8px;">Specialized Agent Analysis:</div>
+                  <div style="display: flex; flex-direction: column; gap: 6px; font-size: 12px;">
+                    <div>• <strong>Technical Momentum</strong>: <span id="st-agent-tech">—</span></div>
+                    <div>• <strong>ML Directional Model</strong>: <span id="st-agent-ml">—</span></div>
+                    <div>• <strong>News Sentiment</strong>: <span id="st-agent-sent">—</span></div>
+                    <div>• <strong>Market Regime</strong>: <span id="st-agent-regime">—</span></div>
+                    <div>• <strong>Crash Risk Probability</strong>: <span id="st-agent-crash">—</span></div>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size: 12px; font-weight: 600; color: var(--text-bright); margin-bottom: 8px;">Short-Term Confidence Metrics:</div>
+                  <div style="display: flex; flex-direction: column; gap: 6px; font-size: 12px;">
+                    <div>• Signal Confidence: <strong id="st-conf-sig">—</strong></div>
+                    <div>• Prediction Confidence: <strong id="st-conf-pred">—</strong></div>
+                    <div>• Market Stability: <strong id="st-conf-stab">—</strong></div>
+                    <div>• Evidence Quality: <strong id="st-conf-ev">—</strong></div>
+                    <div>• Risk Confidence: <strong id="st-conf-risk">—</strong></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Explicit Uncertainty Breakdown -->
+            <div class="panel" style="margin-bottom: 16px; border-left: 3px solid var(--yellow);">
+              <div class="panel__head" style="color: var(--yellow);">⚠️ Explicit Uncertainty Analysis &amp; Research Disclaimer</div>
+              <div class="panel__body">
+                <div id="st-uncertainty-list" style="margin-bottom: 10px; font-size: 12px; line-height: 1.6;"></div>
+                <div style="font-size: 11px; color: var(--text-dim); font-style: italic;" id="st-disclaimer">
+                  No trade is described as guaranteed or risk-free. Model-derived projections are probabilistic simulations subject to sudden market shocks.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── TAB PANE 3: COMBINED PORTFOLIO ───────────────────────── -->
+        <div class="horizon-pane" id="pane-combined" style="display: none;">
+          <!-- Controls -->
+          <div class="panel" style="margin-bottom: 16px;">
+            <div class="panel__head">
+              <span>Combined Multi-Horizon Portfolio &amp; Total Risk Architecture</span>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn--small btn--ghost" id="comb-rebalance-btn" type="button">🔄 Check Rebalance Triggers</button>
+                <button class="btn btn--small btn--buy" id="comb-build-btn" type="button">⚡ Build Combined Portfolio</button>
+              </div>
+            </div>
+            <div class="panel__body" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px;">
+              <div>
+                <label class="tm-label">Total Portfolio Capital</label>
+                <input type="number" id="comb-capital-input" class="tm-input" value="1000000" step="50000" style="width: 100%; font-family: var(--font-mono);">
+              </div>
+              <div>
+                <label class="tm-label">Long-Term Target %</label>
+                <input type="number" id="comb-lt-pct-input" class="tm-input" value="70" min="20" max="90" style="width: 100%; font-family: var(--font-mono);">
+              </div>
+              <div>
+                <label class="tm-label">Short-Term Target %</label>
+                <input type="number" id="comb-st-pct-input" class="tm-input" value="20" min="5" max="50" style="width: 100%; font-family: var(--font-mono);">
+              </div>
+              <div>
+                <label class="tm-label">Cash Buffer %</label>
+                <input type="number" id="comb-cash-pct-input" class="tm-input" value="10" min="5" max="30" style="width: 100%; font-family: var(--font-mono);">
+              </div>
+            </div>
+          </div>
+
+          <!-- Sleeve Visual Allocation Bar -->
+          <div class="panel" style="margin-bottom: 16px; padding: 14px;">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px;">
+              <span><strong>Unified Asset Allocation</strong>: <span id="comb-bar-labels">Long-Term: 70% | Short-Term: 20% | Cash: 10%</span></span>
+              <span id="comb-total-capital-disp">₹10,00,000.00 Total</span>
+            </div>
+            <div style="height: 18px; border-radius: 9px; overflow: hidden; display: flex; background: var(--border);">
+              <div id="comb-bar-lt" style="background: #3a7bd5; width: 70%; transition: width 0.3s;" title="Long-Term Holdings"></div>
+              <div id="comb-bar-st" style="background: #00d4aa; width: 20%; transition: width 0.3s;" title="Short-Term Tactical"></div>
+              <div id="comb-bar-cash" style="background: #ffa502; width: 10%; transition: width 0.3s;" title="Cash Buffer"></div>
+            </div>
+          </div>
+
+          <!-- TOTAL Combined Portfolio Risk Engine Card -->
+          <div class="panel" style="margin-bottom: 16px;">
+            <div class="panel__head">
+              <span>Total Combined Portfolio Risk (Unified Cross-Asset Gate)</span>
+              <span id="comb-risk-status-badge" class="signal-badge" style="font-size: 11px;">APPROVED</span>
+            </div>
+            <div class="panel__body" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+              <div>
+                <div style="font-size: 11px; color: var(--text-dim);">Total Equity Exposure</div>
+                <div style="font-size: 15px; font-weight: 700; color: var(--text-bright); margin-top: 4px;" id="comb-risk-exposure">—</div>
+              </div>
+              <div>
+                <div style="font-size: 11px; color: var(--text-dim);">Portfolio Volatility</div>
+                <div style="font-size: 15px; font-weight: 700; color: var(--cyan); margin-top: 4px;" id="comb-risk-vol">—</div>
+              </div>
+              <div>
+                <div style="font-size: 11px; color: var(--text-dim);">Total VaR (95%)</div>
+                <div style="font-size: 15px; font-weight: 700; color: var(--yellow); margin-top: 4px;" id="comb-risk-var">—</div>
+              </div>
+              <div>
+                <div style="font-size: 11px; color: var(--text-dim);">Total CVaR (95%)</div>
+                <div style="font-size: 15px; font-weight: 700; color: var(--red); margin-top: 4px;" id="comb-risk-cvar">—</div>
+              </div>
+              <div>
+                <div style="font-size: 11px; color: var(--text-dim);">Dominant Sector</div>
+                <div style="font-size: 15px; font-weight: 700; color: var(--text-bright); margin-top: 4px;" id="comb-risk-sector">—</div>
+              </div>
+              <div>
+                <div style="font-size: 11px; color: var(--text-dim);">Max Portfolio Drawdown</div>
+                <div style="font-size: 15px; font-weight: 700; color: var(--text-bright); margin-top: 4px;" id="comb-risk-mdd">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Unified Holdings Table -->
+          <div class="panel" style="margin-bottom: 16px;">
+            <div class="panel__head">Unified Portfolio Holdings Across Horizons</div>
+            <div style="overflow-x: auto; padding: 0 16px 12px;">
+              <table class="data-table" id="comb-holdings-table">
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Horizon Sleeve</th>
+                    <th>Sector</th>
+                    <th>Weight</th>
+                    <th>Capital</th>
+                    <th>Shares</th>
+                    <th>Price</th>
+                    <th>Volatility</th>
+                    <th>VaR 95%</th>
+                  </tr>
+                </thead>
+                <tbody id="comb-holdings-body">
+                  <tr>
+                    <td colspan="9" class="kv-empty">Click "Build Combined Portfolio" to aggregate holdings across long-term and short-term sleeves.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Rebalancing Actions Panel -->
+          <div class="panel" id="comb-rebalance-panel" style="margin-bottom: 16px;">
+            <div class="panel__head">
+              <span>Rule-Based Rebalancing Assessment (Drift, Risk &amp; Regime Triggers)</span>
+              <button class="btn btn--small btn--buy" id="comb-execute-rebalance-btn" type="button" style="display: none;">Execute Rebalance</button>
+            </div>
+            <div class="panel__body" id="comb-rebalance-content">
+              <p class="kv-empty">Rebalance checks monitor 5% sleeve drift, sudden crash risk surges, and regime shifts.</p>
+            </div>
+          </div>
+
+          <!-- Multi-Horizon Evaluation Comparison (Research Integration) -->
+          <div class="panel" style="margin-bottom: 16px;">
+            <div class="panel__head">
+              <span>Research Evaluation: Long-Term vs Short-Term vs Buy &amp; Hold Baseline</span>
+              <button class="btn btn--small" id="comb-run-perf-btn" type="button">⚡ Refresh Performance Comparison</button>
+            </div>
+            <div style="overflow-x: auto; padding: 0 16px 12px;">
+              <table class="data-table" id="comb-perf-table">
+                <thead>
+                  <tr>
+                    <th>Strategy Framework</th>
+                    <th>Horizon Category</th>
+                    <th>CAGR</th>
+                    <th>Sharpe</th>
+                    <th>Sortino</th>
+                    <th>Max Drawdown</th>
+                    <th>Win Rate</th>
+                    <th>VaR (95%)</th>
+                    <th>Turnover</th>
+                    <th>Abstention Rate</th>
+                    <th>Risk-Adjusted (MAR)</th>
+                  </tr>
+                </thead>
+                <tbody id="comb-perf-body">
+                  <tr>
+                    <td colspan="11" class="kv-empty">Loading causal multi-horizon backtest comparison...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SECTION: DIGITAL TWIN SANDBOX ═══════════════════════════ -->
+      <div class="section" id="sec-digital-twin">
+        <div class="panel" style="margin-bottom: 16px;">
+          <div class="panel__head">
+            <span>🧪 Personal Portfolio Digital Twin — Isolated What-If Sandbox</span>
+            <span class="sidebar__header-badge" style="background: rgba(0,212,170,0.15); color: var(--green);">ISOLATED SIMULATION</span>
+          </div>
+          <div class="panel__body">
+            <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 14px;">
+              Experiment with hypothetical position shifts, sector rotations, and macroeconomic stress shocks on an in-memory clone of your paper portfolio.
+              <strong>Zero mutation to actual paper trades or live ledger balances.</strong>
+            </p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
+              <button class="btn btn--small btn--ghost" type="button" onclick="window.runDigitalTwinPreset(-0.05, 1.0, 0.0, '5% Market Dip')">📉 -5% Market Dip</button>
+              <button class="btn btn--small btn--ghost" type="button" onclick="window.runDigitalTwinPreset(-0.10, 1.25, 0.0, '10% Market Pullback')">⚠️ -10% Pullback</button>
+              <button class="btn btn--small btn--ghost" type="button" onclick="window.runDigitalTwinPreset(-0.20, 1.50, 0.0, '20% Bear Shock')">🚨 -20% Bear Shock</button>
+              <button class="btn btn--small btn--ghost" type="button" onclick="window.runDigitalTwinPreset(0.0, 1.0, 0.15, 'Move 15% to Cash')">💵 Move 15% to Cash</button>
+              <button class="btn btn--small btn--buy" type="button" onclick="window.runDigitalTwinSimulation()">⚡ Run Custom What-If</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 12px;">
+              <div>
+                <label class="tm-label">Market Shock %</label>
+                <input type="number" id="dt-market-shock" class="tm-input" value="-10" step="1" style="width: 100%;">
+              </div>
+              <div>
+                <label class="tm-label">Volatility Multiplier</label>
+                <input type="number" id="dt-vol-multiplier" class="tm-input" value="1.25" step="0.1" style="width: 100%;">
+              </div>
+              <div>
+                <label class="tm-label">Shift to Cash %</label>
+                <input type="number" id="dt-cash-shift" class="tm-input" value="0" step="5" style="width: 100%;">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom: 16px;">
+          <div class="panel__head">
+            <span>📊 Baseline Portfolio vs. Simulated Stress Twin</span>
+            <span id="dt-scenario-badge" style="font-size: 12px; color: var(--accent-light);">No scenario run yet</span>
+          </div>
+          <div class="panel__body">
+            <div style="overflow-x: auto;">
+              <table class="data-table" id="dt-comparison-table">
+                <thead>
+                  <tr>
+                    <th>Quantitative Metric</th>
+                    <th>Live Baseline Portfolio</th>
+                    <th>Simulated Digital Twin</th>
+                    <th>Variance / Delta</th>
+                  </tr>
+                </thead>
+                <tbody id="dt-comparison-body">
+                  <tr>
+                    <td><strong>Total Portfolio Value</strong></td>
+                    <td id="dt-base-val">$100,000.00</td>
+                    <td id="dt-sim-val">—</td>
+                    <td id="dt-diff-val">—</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Cash Allocation %</strong></td>
+                    <td id="dt-base-cash">100.0%</td>
+                    <td id="dt-sim-cash">—</td>
+                    <td id="dt-diff-cash">—</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Parametric VaR (95% 1-Day)</strong></td>
+                    <td id="dt-base-var">—</td>
+                    <td id="dt-sim-var">—</td>
+                    <td id="dt-diff-var">—</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Expected Shortfall (CVaR 95%)</strong></td>
+                    <td id="dt-base-cvar">—</td>
+                    <td id="dt-sim-cvar">—</td>
+                    <td id="dt-diff-cvar">—</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Annualized Volatility</strong></td>
+                    <td id="dt-base-vol">—</td>
+                    <td id="dt-sim-vol">—</td>
+                    <td id="dt-diff-vol">—</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Estimated Friction &amp; Turnover</strong></td>
+                    <td>0.00% turnover</td>
+                    <td id="dt-sim-friction">—</td>
+                    <td id="dt-diff-friction">—</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SECTION: SYSTEM HEALTH & ATTRIBUTION ═════════════════════ -->
+      <div class="section" id="sec-system-health">
+        <div class="panel" style="margin-bottom: 16px;">
+          <div class="panel__head">
+            <span>🩺 AI Reliability, Drift Monitor &amp; System Health</span>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn--small btn--ghost" type="button" onclick="window.triggerSafeRecovery()">🛡️ Trigger Safe Recovery</button>
+              <button class="btn btn--small btn--buy" type="button" onclick="window.refreshSystemReliability()">🔄 Refresh Health</button>
+            </div>
+          </div>
+          <div class="panel__body">
+            <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 16px; flex-wrap: wrap;">
+              <div style="font-size: 14px; font-weight: 700;">Platform Status: <span class="sidebar__header-badge" id="health-overall-badge" style="background: rgba(0,212,170,0.15); color: var(--green);">HEALTHY</span></div>
+              <div style="font-size: 12px; color: var(--text-dim);">Trade Lock: <strong id="health-trade-lock" style="color: var(--green);">CLEARED</strong></div>
+              <div style="font-size: 12px; color: var(--text-dim);">Position Multiplier: <strong id="health-pos-mult">100%</strong></div>
+              <div style="font-size: 12px; color: var(--text-dim);">Active Provider: <strong id="health-active-llm" style="color: var(--cyan);">OpenRouter</strong></div>
+            </div>
+            <div id="health-checks-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+              <!-- JS Populates Subsystem Cards -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Attribution Card -->
+        <div class="panel" style="margin-bottom: 16px;">
+          <div class="panel__head">
+            <span>📈 Portfolio Decision Attribution (Brinson-Fachler Factor Decomposition)</span>
+            <button class="btn btn--small btn--ghost" type="button" onclick="window.refreshAttribution()">⚡ Refresh Attribution</button>
+          </div>
+          <div class="panel__body">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 16px;">
+              <div style="background: var(--bg-panel-2); padding: 12px; border-radius: 6px;">
+                <div style="font-size: 11px; color: var(--text-dim);">Total Return vs Benchmark</div>
+                <div style="font-size: 18px; font-weight: 800; color: var(--green); margin-top: 4px;" id="attr-tot-return">+0.00%</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">SPY: <span id="attr-bench-return">+8.50%</span></div>
+              </div>
+              <div style="background: var(--bg-panel-2); padding: 12px; border-radius: 6px;">
+                <div style="font-size: 11px; color: var(--text-dim);">Stock Selection Alpha</div>
+                <div style="font-size: 18px; font-weight: 800; color: var(--cyan); margin-top: 4px;" id="attr-select-effect">+0 bps</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Stock picking contribution</div>
+              </div>
+              <div style="background: var(--bg-panel-2); padding: 12px; border-radius: 6px;">
+                <div style="font-size: 11px; color: var(--text-dim);">Sector Allocation Effect</div>
+                <div style="font-size: 18px; font-weight: 800; color: var(--yellow); margin-top: 4px;" id="attr-alloc-effect">+0 bps</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Sector weighting contribution</div>
+              </div>
+              <div style="background: var(--bg-panel-2); padding: 12px; border-radius: 6px;">
+                <div style="font-size: 11px; color: var(--text-dim);">Cash Drag &amp; Friction</div>
+                <div style="font-size: 18px; font-weight: 800; color: var(--red); margin-top: 4px;" id="attr-drag-effect">-0 bps</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Uninvested cash + fees</div>
+              </div>
+            </div>
+            <div style="font-size: 12px; color: var(--text-bright);">Top Positive Contributors: <span id="attr-pos-contributors" style="color: var(--green);">None</span></div>
+            <div style="font-size: 12px; color: var(--text-bright); margin-top: 4px;">Top Negative Contributors: <span id="attr-neg-contributors" style="color: var(--red);">None</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SECTION: FOREX & MACRO ECONOMIC EVENTS ═══════════════ -->
+      <div class="section" id="sec-forex">
+        <!-- Pair Selector Header -->
+        <div class="panel" style="margin-bottom: 16px;">
+          <div class="panel__head" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <span>💱 G10 Currency Pair Terminal</span>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;" id="forex-pair-pills">
+              <button class="btn btn--small btn--ghost forex-pair-btn active" data-pair="EUR/USD" onclick="window.selectForexPair('EUR/USD')">EUR/USD</button>
+              <button class="btn btn--small btn--ghost forex-pair-btn" data-pair="GBP/USD" onclick="window.selectForexPair('GBP/USD')">GBP/USD</button>
+              <button class="btn btn--small btn--ghost forex-pair-btn" data-pair="USD/JPY" onclick="window.selectForexPair('USD/JPY')">USD/JPY</button>
+              <button class="btn btn--small btn--ghost forex-pair-btn" data-pair="AUD/USD" onclick="window.selectForexPair('AUD/USD')">AUD/USD</button>
+              <button class="btn btn--small btn--ghost forex-pair-btn" data-pair="USD/CAD" onclick="window.selectForexPair('USD/CAD')">USD/CAD</button>
+              <button class="btn btn--small btn--ghost forex-pair-btn" data-pair="USD/CHF" onclick="window.selectForexPair('USD/CHF')">USD/CHF</button>
+              <button class="btn btn--small btn--ghost forex-pair-btn" data-pair="NZD/USD" onclick="window.selectForexPair('NZD/USD')">NZD/USD</button>
+            </div>
+            <button class="btn btn--small btn--ghost" type="button" onclick="window.refreshForexData()">⚡ Refresh Forex</button>
+          </div>
+          <div class="panel__body" style="padding: 14px 18px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;">
+              <div style="background: var(--bg-panel-2); padding: 12px; border-radius: 6px;">
+                <div style="font-size: 11px; color: var(--text-dim);">Selected Pair / Spot Mid</div>
+                <div style="font-size: 20px; font-weight: 800; color: var(--cyan); margin-top: 4px;" id="fx-spot-rate">1.08500</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Bid: <span id="fx-bid-price">1.08494</span> | Ask: <span id="fx-ask-price">1.08506</span></div>
+              </div>
+              <div style="background: var(--bg-panel-2); padding: 12px; border-radius: 6px;">
+                <div style="font-size: 11px; color: var(--text-dim);">24h Pip Movement</div>
+                <div style="font-size: 20px; font-weight: 800; color: var(--green); margin-top: 4px;" id="fx-pip-change">+15.0 pips</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Return: <span id="fx-return-pct">+0.14%</span></div>
+              </div>
+              <div style="background: var(--bg-panel-2); padding: 12px; border-radius: 6px;">
+                <div style="font-size: 11px; color: var(--text-dim);">Live Spread &amp; Friction</div>
+                <div style="font-size: 20px; font-weight: 800; color: var(--yellow); margin-top: 4px;" id="fx-spread-display">1.2 pips</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Pip Unit: <span id="fx-pip-size">0.0001</span></div>
+              </div>
+              <div style="background: var(--bg-panel-2); padding: 12px; border-radius: 6px;">
+                <div style="font-size: 11px; color: var(--text-dim);">Active Market Sessions</div>
+                <div style="font-size: 15px; font-weight: 700; color: var(--text-bright); margin-top: 6px;" id="fx-active-sessions">London, New York</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Global 24h Interbank</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Two Columns: Market Regime & Event Risk Gate -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 16px; margin-bottom: 16px;">
+          <!-- Market Regime Card -->
+          <div class="panel">
+            <div class="panel__head">
+              <span>🤖 Market Regime Intelligence AI</span>
+              <span class="sidebar__header-badge" id="fx-regime-badge" style="background: rgba(0,212,170,0.15); color: var(--green);">Ranging</span>
+            </div>
+            <div class="panel__body">
+              <div style="margin-bottom: 12px;">
+                <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 4px;">Regime Confidence &amp; Conviction</div>
+                <div style="background: rgba(255,255,255,0.06); height: 8px; border-radius: 4px; overflow: hidden;">
+                  <div id="fx-regime-conf-bar" style="background: var(--cyan); width: 75%; height: 100%;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                  <span>Confidence: <strong id="fx-regime-conf-pct">75%</strong></span>
+                  <span>Trend: <strong id="fx-trend-dir" style="color: var(--cyan);">NEUTRAL</strong></span>
+                  <span>Vol Level: <strong id="fx-vol-level" style="color: var(--yellow);">NORMAL</strong></span>
+                </div>
+              </div>
+              <div style="background: var(--bg-panel-2); padding: 10px; border-radius: 6px; font-size: 12px; color: var(--text-dim); line-height: 1.4; margin-bottom: 12px;" id="fx-regime-explanation">
+                Range-bound consolidation with weak directional conviction. Mean-reverting oscillators and support/resistance boundaries dominate price action.
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 11px;">
+                <div>ADX (14): <strong id="fx-ind-adx">18.5</strong></div>
+                <div>BB Width: <strong id="fx-ind-bb">0.0162</strong></div>
+                <div>ATR (14): <strong id="fx-ind-atr">0.0062</strong></div>
+                <div>Ann. Vol: <strong id="fx-ind-vol">7.5%</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Deterministic Event Risk Gate -->
+          <div class="panel">
+            <div class="panel__head">
+              <span>🛡️ Deterministic Event-Risk Gate</span>
+              <span class="sidebar__header-badge" id="fx-risk-badge" style="background: rgba(0,212,170,0.15); color: var(--green);">PERMITTED</span>
+            </div>
+            <div class="panel__body">
+              <div style="font-size: 13px; font-weight: 700; color: var(--text-bright); margin-bottom: 6px;">
+                Simulated New Trade Gate: <span id="fx-risk-status-text" style="color: var(--green);">CLEARED</span>
+              </div>
+              <p style="font-size: 12px; color: var(--text-dim); line-height: 1.4; margin-bottom: 12px;" id="fx-risk-reason-text">
+                All event-risk parameters within normal boundaries. No active blackout window or extreme spread widening detected.
+              </p>
+              <div style="background: var(--bg-panel-2); padding: 10px; border-radius: 6px; font-size: 11px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                  <span>Announcement Blackout Window:</span>
+                  <strong id="fx-risk-blackout">+/-30 min (INACTIVE)</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                  <span>Spread Ratio vs Normal:</span>
+                  <strong id="fx-risk-spread-ratio">1.0x (Threshold: 2.5x)</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span>Existing Position Invariance:</span>
+                  <strong style="color: var(--cyan);">PRESERVED (Never Mutated)</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Macro Pre-Event & Post-Event Analysis Card -->
+        <div class="panel" style="margin-bottom: 16px;">
+          <div class="panel__head" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <span>⏱️ Pre-Event &amp; Post-Event Macro Economic Intelligence</span>
+            <div style="display: flex; gap: 8px;">
+              <select id="fx-event-select" class="tm-input" style="padding: 3px 8px; font-size: 11px; width: auto;" onchange="window.loadForexEvent(this.value)">
+                <option value="FOMC_2026_10">Federal Reserve FOMC Rate Decision</option>
+                <option value="US_CPI_2026_10">US Consumer Price Index (CPI YoY)</option>
+                <option value="ECB_RATE_2026_10">ECB Main Refinancing Rate Decision</option>
+                <option value="US_NFP_2026_11">US Non-Farm Payrolls (NFP)</option>
+                <option value="UK_CPI_2026_10">UK Consumer Price Index (CPI)</option>
+              </select>
+              <button class="btn btn--small btn--ghost" type="button" onclick="window.simulatePostEvent()">⚡ Run Post-Event Analysis</button>
+            </div>
+          </div>
+          <div class="panel__body">
+            <!-- Event Overview Header -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 14px;">
+              <div style="background: var(--bg-panel-2); padding: 10px; border-radius: 6px;">
+                <div style="font-size: 11px; color: var(--text-dim);">Scheduled Time</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--text-bright); margin-top: 2px;" id="fx-ev-time">2026-10-22 18:00 UTC</div>
+              </div>
+              <div style="background: var(--bg-panel-2); padding: 10px; border-radius: 6px;">
+                <div style="font-size: 11px; color: var(--text-dim);">Consensus vs Previous</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--cyan); margin-top: 2px;" id="fx-ev-consensus">4.75% (Prev: 4.75%)</div>
+              </div>
+              <div style="background: var(--bg-panel-2); padding: 10px; border-radius: 6px;">
+                <div style="font-size: 11px; color: var(--text-dim);">Actual Release &amp; Surprise</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--green); margin-top: 2px;" id="fx-ev-actual">4.75% (Surprise: 0.00)</div>
+              </div>
+              <div style="background: var(--bg-panel-2); padding: 10px; border-radius: 6px;">
+                <div style="font-size: 11px; color: var(--text-dim);">Observed Reaction Pattern</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--yellow); margin-top: 2px;" id="fx-ev-pattern">REVERSAL (65% mean rev.)</div>
+              </div>
+            </div>
+
+            <!-- Multi-Window Timeline Table -->
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-bright); margin-bottom: 8px;">Multi-Window Price &amp; Spread Reaction Timeline:</div>
+            <div class="table-wrap" style="margin-bottom: 14px;">
+              <table class="data-table" id="fx-windows-table">
+                <thead>
+                  <tr>
+                    <th>Observation Window</th>
+                    <th>Elapsed</th>
+                    <th>Price Δ</th>
+                    <th>Pip Movement</th>
+                    <th>Return %</th>
+                    <th>Spread (Pips)</th>
+                    <th>Realized Vol</th>
+                  </tr>
+                </thead>
+                <tbody id="fx-windows-tbody">
+                  <tr>
+                    <td>immediate (1m)</td>
+                    <td>+1m</td>
+                    <td>+0.00160</td>
+                    <td>+16.0 pips</td>
+                    <td>+0.15%</td>
+                    <td>4.2 pips</td>
+                    <td>18.0%</td>
+                  </tr>
+                  <tr>
+                    <td>5m</td>
+                    <td>+5m</td>
+                    <td>+0.00240</td>
+                    <td>+24.0 pips</td>
+                    <td>+0.22%</td>
+                    <td>3.1 pips</td>
+                    <td>14.5%</td>
+                  </tr>
+                  <tr>
+                    <td>15m</td>
+                    <td>+15m</td>
+                    <td>+0.00190</td>
+                    <td>+19.0 pips</td>
+                    <td>+0.17%</td>
+                    <td>2.0 pips</td>
+                    <td>11.2%</td>
+                  </tr>
+                  <tr>
+                    <td>30m</td>
+                    <td>+30m</td>
+                    <td>+0.00140</td>
+                    <td>+14.0 pips</td>
+                    <td>+0.13%</td>
+                    <td>1.6 pips</td>
+                    <td>9.4%</td>
+                  </tr>
+                  <tr>
+                    <td>60m</td>
+                    <td>+60m</td>
+                    <td>+0.00080</td>
+                    <td>+8.0 pips</td>
+                    <td>+0.07%</td>
+                    <td>1.3 pips</td>
+                    <td>8.1%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pre vs Post Summary Statement -->
+            <div style="background: rgba(0,212,170,0.06); border-left: 3px solid var(--green); padding: 10px 14px; font-size: 12px; color: var(--text-dim);" id="fx-comparison-summary">
+              Pre-event risk model correctly anticipated elevated volatility (+4.2 pip spread expansion). Initial upward spike reversed by 65% within 60 minutes as market absorbed announcement.
+            </div>
+          </div>
+        </div>
+
+        <!-- Forex Event Reaction Memory Panel -->
+        <div class="panel">
+          <div class="panel__head">
+            <span>🧠 Historical Event Reaction Memory (Similar Analogs)</span>
+            <span class="sidebar__header-badge" id="fx-memory-reversal-badge" style="background: rgba(240,185,11,0.15); color: var(--yellow);">HIGH REVERSAL TENDENCY</span>
+          </div>
+          <div class="panel__body">
+            <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 12px;" id="fx-memory-guidance">
+              Across comparable historical INTEREST_RATE events, 67% experienced post-spike mean reversion within 60 minutes.
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Historical Event</th>
+                    <th>Date</th>
+                    <th>Surprise</th>
+                    <th>Initial 5m Pips</th>
+                    <th>60m Net Pips</th>
+                    <th>Observed Pattern</th>
+                    <th>Similarity Score</th>
+                  </tr>
+                </thead>
+                <tbody id="fx-memory-tbody">
+                  <tr>
+                    <td>Federal Reserve Rate Decision (50 bps cut)</td>
+                    <td>2025-09-17</td>
+                    <td>-0.25%</td>
+                    <td>+62.0 pips</td>
+                    <td>+18.0 pips</td>
+                    <td><span class="sidebar__header-badge" style="background: rgba(240,185,11,0.15); color: var(--yellow);">REVERSAL</span></td>
+                    <td>95%</td>
+                  </tr>
+                  <tr>
+                    <td>Federal Reserve Rate Decision (Hold)</td>
+                    <td>2025-05-07</td>
+                    <td>0.00%</td>
+                    <td>+12.0 pips</td>
+                    <td>+8.0 pips</td>
+                    <td><span class="sidebar__header-badge" style="background: rgba(0,212,170,0.15); color: var(--green);">CONSOLIDATION</span></td>
+                    <td>85%</td>
+                  </tr>
+                  <tr>
+                    <td>US Consumer Price Index (CPI YoY)</td>
+                    <td>2025-08-12</td>
+                    <td>-0.10%</td>
+                    <td>+38.0 pips</td>
+                    <td>+42.0 pips</td>
+                    <td><span class="sidebar__header-badge" style="background: rgba(0,212,255,0.15); color: var(--cyan);">CONTINUATION</span></td>
+                    <td>80%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+              ⚠️ Past price reactions reflect prevailing historical liquidity conditions and do not guarantee future performance.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ═══ CHAT PANEL (Slide-In) ═════════════════════════════════════════ -->
+  <div class="chat-backdrop" id="chat-backdrop"></div>
+  <div class="chat-panel" id="chat-panel">
+    <div class="chat-panel__header">
+      <div class="chat-panel__title">
+        💬 AI Trading Assistant
+        <span class="sidebar__header-badge" id="chat-llm-indicator">...</span>
+      </div>
+      <button class="btn btn--small btn--ghost" id="open-llm-modal-btn" type="button"
+        style="font-size: 11px; padding: 3px 8px; border-color: rgba(0,212,170,0.35); color: #00d4aa; margin-left: auto; margin-right: 8px;"
+        title="Configure Google Gemini Free AI Engine">⚡ LLM Setup</button>
+      <button class="chat-panel__close" id="chat-close-btn">✕</button>
+    </div>
+    <div class="chat-log" id="chat-log">
+      <div class="chat-msg chat-msg--bot">👋 **Hi! I'm your AI Trading Research Assistant.**
+        <br><br>I translate multi-agent market models and quantitative indicators into clear, humanized, explainable
+        insights.
+        <br><br><strong>Try asking me:</strong>
+        <br>• <em>"Should I buy AAPL right now?"</em>
+        <br>• <em>"What is RSI and how do I use it?"</em>
+        <br>• <em>"Explain P/E ratio with examples"</em>
+        <br>• <em>"Compare MSFT vs GOOGL"</em>
+        <br>• <em>"What's the latest news on NVDA?"</em>
+      </div>
+    </div>
+    <form class="chat-input-row" id="chat-form">
+      <input type="text" id="chat-input" placeholder="Ask anything about stocks, indicators, or analysis…"
+        autocomplete="off">
+      <button type="submit" class="btn">Send</button>
+    </form>
+  </div>
+
+  <!-- ═══ LLM SETUP MODAL ═════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="llm-modal-overlay" style="display: none;">
+    <div class="trade-modal" id="llm-modal" style="max-width: 480px;">
+      <div class="trade-modal__head">
+        <div class="trade-modal__title">
+          <span>⚡ AI Engine Setup (OpenRouter & Gemini)</span>
+        </div>
+        <button class="trade-modal__close" id="llm-modal-close-btn" type="button">✕</button>
+      </div>
+      <div class="trade-modal__body" style="gap: 14px;">
+        <!-- Active Provider Banner -->
+        <div
+          style="background: var(--bg-panel-hover); border: 1px solid var(--border-color); border-radius: 6px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">
+              Active AI Engine</div>
+            <div style="font-size: 14px; font-weight: 600; color: #00d4aa; margin-top: 2px;"
+              id="llm-modal-current-engine">Loading...</div>
+          </div>
+          <span class="sidebar__header-badge" id="llm-modal-status-badge">...</span>
+        </div>
+
+        <!-- Feature Highlight -->
+        <div
+          style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; background: rgba(0, 212, 170, 0.05); border-left: 3px solid #00d4aa; padding: 8px 12px; border-radius: 0 4px 4px 0;">
+          <strong>Why connect an AI Engine?</strong> Unlocks conversational intelligence, natural language trading advice, macro event synthesis, and answers to any market question.
+        </div>
+
+        <!-- Key Input Form -->
+        <div class="tm-form-group">
+          <label for="gemini-key-input" class="tm-label" style="display: flex; justify-content: space-between;">
+            <span>API Key (OpenRouter or Gemini)</span>
+            <span>
+              <a href="https://openrouter.ai/keys" target="_blank" rel="noopener"
+                style="color: #00d4aa; text-decoration: underline; font-size: 11px; margin-right: 8px;">OpenRouter Keys ↗</a>
+              <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener"
+                style="color: #00d4aa; text-decoration: underline; font-size: 11px;">Gemini Keys ↗</a>
+            </span>
+          </label>
+          <div style="position: relative;">
+            <input type="password" id="gemini-key-input" placeholder="Paste OpenRouter (sk-or-...) or Gemini (AIzaSy...) key" class="tm-input"
+              style="width: 100%; padding-right: 40px; font-family: var(--font-mono); font-size: 12px;"
+              autocomplete="off">
+            <button type="button" id="gemini-key-toggle-btn"
+              style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 13px;">👁️</button>
+          </div>
+          <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">
+            Supports OpenRouter (GPT-4o Mini, Claude, DeepSeek) and Google Gemini with automatic provider detection.
+          </div>
+        </div>
+
+        <!-- Notice area -->
+        <div id="llm-modal-notice" class="tm-notice" style="display: none;"></div>
+
+        <!-- Actions -->
+        <div style="display: flex; gap: 8px; margin-top: 4px;">
+          <button class="btn btn--buy" id="llm-save-key-btn" type="button" style="flex: 1;">
+            Activate AI Engine
+          </button>
+          <button class="btn btn--ghost" id="llm-clear-key-btn" type="button"
+            style="font-size: 12px; color: var(--text-dim);">
+            Clear Key
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TRADE MODAL ═════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="trade-modal-overlay" style="display: none;">
+    <div class="trade-modal" id="trade-modal">
+      <div class="trade-modal__head">
+        <div class="trade-modal__title">
+          <span>Order Execution — </span><strong id="tm-symbol">AAPL</strong>
+        </div>
+        <button class="trade-modal__close" id="tm-close-btn" type="button">✕</button>
+      </div>
+      <div class="trade-modal__body">
+        <!-- Buy / Sell Toggle -->
+        <div class="trade-side-selector">
+          <button class="trade-side-btn active buy" id="tm-side-buy" data-side="BUY" type="button">BUY / LONG</button>
+          <button class="trade-side-btn sell" id="tm-side-sell" data-side="SELL" type="button">SELL / EXIT</button>
+        </div>
+
+        <!-- Live Price & Cash Row -->
+        <div class="tm-row">
+          <div class="tm-col">
+            <span class="tm-label">Market Price</span>
+            <span class="tm-val" id="tm-price">$0.00</span>
+          </div>
+          <div class="tm-col">
+            <span class="tm-label">Available Cash</span>
+            <span class="tm-val" id="tm-cash">$100,000.00</span>
+          </div>
+        </div>
+
+        <!-- Quantity Input -->
+        <div class="tm-form-group">
+          <label for="tm-qty" class="tm-label">Shares Quantity</label>
+          <div class="tm-qty-wrap">
+            <button class="tm-qty-btn" id="tm-qty-minus" type="button">-</button>
+            <input type="number" id="tm-qty" min="1" step="1" value="10" class="tm-input">
+            <button class="tm-qty-btn" id="tm-qty-plus" type="button">+</button>
+          </div>
+          <div class="tm-quick-pills">
+            <button class="tm-pill" data-qty="1" type="button">1</button>
+            <button class="tm-pill" data-qty="5" type="button">5</button>
+            <button class="tm-pill" data-qty="10" type="button">10</button>
+            <button class="tm-pill" data-qty="25" type="button">25</button>
+            <button class="tm-pill" data-qty="50" type="button">50</button>
+            <button class="tm-pill" data-qty="100" type="button">100</button>
+          </div>
+        </div>
+
+        <!-- Order Summary Card -->
+        <div class="tm-summary-card">
+          <div class="tm-summary-row">
+            <span>Total Trade Value</span>
+            <strong id="tm-total-value">$0.00</strong>
+          </div>
+          <div class="tm-summary-row" style="font-size: 11px; color: var(--text-dim);">
+            <span>Estimated Fee (10 bps)</span>
+            <span id="tm-fee">$0.00</span>
+          </div>
+          <div class="tm-summary-row" style="font-size: 11px; color: var(--text-dim);">
+            <span>Estimated Slippage (5 bps)</span>
+            <span id="tm-slippage">$0.00</span>
+          </div>
+          <div class="tm-summary-sep"></div>
+          <div class="tm-summary-row tm-net-row">
+            <span>Total Order Cost</span>
+            <strong id="tm-net-cost" style="color: #00d4aa;">$0.00</strong>
+          </div>
+        </div>
+
+        <!-- Error / Status Notice -->
+        <div id="tm-status-notice" class="tm-notice" style="display:none;"></div>
+
+        <!-- Action Button -->
+        <button class="btn btn--buy tm-submit-btn" id="tm-submit-btn" type="button">
+          Execute BUY Order
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ FLOATING CHAT BUTTON ═════════════════════════════════════════ -->
+  <button class="chat-fab" id="chat-fab" title="Open AI Chat">💬</button>
+
+  <!-- ═══ FOOTER ════════════════════════════════════════════════════════ -->
+  <footer class="footer-disclaimer">
+    Research / paper-trading simulation only. No real orders are ever placed. Market data may use synthetic fallback
+    when live feeds are unavailable. Nothing here is investment advice.
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+
+</html>
